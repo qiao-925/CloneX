@@ -10,6 +10,7 @@ from ..core.failed_repos import save_failed_repos
 from ..core.parallel import execute_parallel_clone
 from ..core.process_control import clear_shutdown_request
 from ..core.pull import execute_parallel_pull
+from ..infra.logger import log_exception
 
 CHECK_TIMEOUT = 30
 FAILED_REPOS_FILE: Path = repo_config.SCRIPT_DIR / "failed-repos.txt"
@@ -88,6 +89,7 @@ def run_clone_and_check(
     except SystemExit:
         return False, {}, "Config parse failed"
     except Exception as exc:
+        log_exception("克隆/检查流程执行失败", exc)
         return False, {}, str(exc)
 
 
@@ -147,4 +149,5 @@ def run_pull_updates(
     except SystemExit:
         return False, {}, "Config parse failed"
     except Exception as exc:
+        log_exception("批量更新流程执行失败", exc)
         return False, {}, str(exc)

@@ -38,7 +38,7 @@ def build_custom_stylesheet(scale: float = 1.0) -> str:
         color: #bdbdbd;
         font-size: {pt(9.5)}pt;
     }}
-    QLineEdit, QTextEdit, QListWidget {{
+    QLineEdit, QTextEdit, QPlainTextEdit, QListWidget {{
         background-color: #242424;
         border: 1px solid #3a3a3a;
         border-radius: {px(6)}px;
@@ -75,6 +75,35 @@ def build_custom_stylesheet(scale: float = 1.0) -> str:
     QPushButton:disabled {{
         background-color: #2a2a2a;
         color: #777;
+    }}
+    QFrame#log-panel {{
+        background-color: #202225;
+        border: 1px solid #34373c;
+        border-radius: {px(10)}px;
+    }}
+    QLabel#log-hint {{
+        color: #9ba1a8;
+        font-size: {pt(9)}pt;
+    }}
+    QPushButton#log-action {{
+        background-color: #25282d;
+        border: 1px solid #3a3d42;
+        border-radius: {px(6)}px;
+        padding: {px(4)}px {px(10)}px;
+        min-height: {px(26)}px;
+        font-size: {pt(9.5)}pt;
+    }}
+    QPushButton#log-action:hover {{
+        background-color: #2f343a;
+    }}
+    QPlainTextEdit#log-view {{
+        background-color: #17191c;
+        border: 1px solid #2c3137;
+        border-radius: {px(8)}px;
+        padding: {px(10)}px;
+        selection-background-color: #4d7c8a;
+        font-family: "Cascadia Mono", "Consolas", "Courier New";
+        font-size: {pt(9.5)}pt;
     }}
     QProgressBar {{
         border: 1px solid #3a3a3a;

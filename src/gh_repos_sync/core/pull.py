@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
 from .process_control import is_shutdown_requested, start_tracked_process, terminate_process, untrack_process
-from ..infra.logger import log_error, log_info, log_success, log_warning
+from ..infra.logger import log_debug, log_error, log_exception, log_info, log_success, log_warning
 
 
 def _extract_pull_failure_reason(stderr_text: str) -> str:
@@ -79,13 +79,15 @@ def pull_repo(repo_full: str, repo_name: str, group_folder: str) -> Tuple[bool, 
         if result_code != 0:
             reason = _extract_pull_failure_reason(stderr_text)
             log_error(f"update failed [{reason}]: {repo_full}")
+            if stderr_text:
+                log_debug(f"git pull stderr [{repo_full}]: {stderr_text.strip()}")
             return False, reason
 
         log_success(f"update success: {repo_full}")
         return True, ""
 
     except Exception as exc:
-        log_error(f"update exception: {repo_full} - {exc}")
+        log_exception(f"update exception: {repo_full}", exc)
         return False, "exception"
 
 

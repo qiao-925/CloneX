@@ -24,7 +24,7 @@ from .process_control import (
     terminate_process,
     untrack_process,
 )
-from ..infra.logger import log_error, log_info, log_success
+from ..infra.logger import log_debug, log_error, log_exception, log_info, log_success
 
 
 def get_repo_url(repo_full: str) -> str:
@@ -226,10 +226,12 @@ def clone_repo(
         process = start_tracked_process(
             git_cmd,
             stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
         )
         try:
-            result_code = process.wait()
+            _, stderr_text = process.communicate()
+            result_code = process.returncode
         finally:
             untrack_process(process)
 
@@ -240,21 +242,17 @@ def clone_repo(
             return False
 
         if result_code != 0:
-            raise subprocess.CalledProcessError(result_code, git_cmd)
+            log_error(f"克隆失败: {repo_full}")
+            if stderr_text:
+                log_debug(f"git clone stderr [{repo_full}]: {stderr_text.strip()}")
+            _cleanup_failed_directory(target_path)
+            return False
         
         log_success(f"克隆成功: {repo_full}")
         return True
-        
-    except subprocess.CalledProcessError as e:
-        log_error(f"克隆失败: {repo_full}")
-        
-        # 如果克隆失败，清理不完整的目录
-        _cleanup_failed_directory(target_path)
-        
-        return False
     
     except Exception as e:
-        log_error(f"克隆异常: {repo_full} - {e}")
+        log_exception(f"克隆异常: {repo_full}", e)
         
         # 如果克隆失败，清理不完整的目录
         _cleanup_failed_directory(target_path)

@@ -13,8 +13,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import (
     QApplication, QFormLayout, QFrame, QHBoxLayout, QInputDialog, QLabel,
-    QLayout, QLineEdit, QMainWindow, QMessageBox, QProgressBar,
-    QPushButton, QShortcut, QSizePolicy, QSpinBox, QTextEdit, QVBoxLayout,
+    QLayout, QLineEdit, QMainWindow, QMessageBox, QPlainTextEdit,
+    QProgressBar, QPushButton, QShortcut, QSizePolicy, QSpinBox, QVBoxLayout,
     QWidget
 )
 
@@ -33,6 +33,7 @@ from ..core import repo_config
 from ..core.process_control import request_shutdown
 from ..core.repo_config import read_owner, write_owner
 from ..infra import ai, auth
+from ..infra.logger import get_log_file_path
 from .chrome import apply_windows_dark_titlebar, build_app_icon, make_section_header
 from .theme import build_custom_stylesheet
 from .workers import (
@@ -78,6 +79,7 @@ class MainWindow(QMainWindow):
         self.ai_generate_worker = None
         self.ui_scale = DEFAULT_UI_SCALE
         self.current_execution_label = "克隆"
+        self.startup_notices.append(f"详细日志文件：{get_log_file_path()}")
 
         self.init_ui()
         self._setup_zoom_shortcuts()
@@ -186,7 +188,14 @@ class MainWindow(QMainWindow):
         self.clone_btn.setMinimumHeight(self._scaled(32))
         self.pull_btn.setMinimumHeight(self._scaled(32))
         self.retry_failed_btn.setMinimumHeight(self._scaled(32))
-        self.log_text.setMinimumHeight(self._scaled(340))
+        self.log_panel_layout.setSpacing(self._scaled(8))
+        self.log_panel_layout.setContentsMargins(
+            self._scaled(12), self._scaled(12), self._scaled(12), self._scaled(12)
+        )
+        self.log_toolbar_layout.setSpacing(self._scaled(8))
+        self.open_log_btn.setMinimumHeight(self._scaled(28))
+        self.clear_log_btn.setMinimumHeight(self._scaled(28))
+        self.log_text.setMinimumHeight(self._scaled(320))
         self.log_text.setMaximumHeight(16777215)
 
     def closeEvent(self, event) -> None:
@@ -441,11 +450,46 @@ class MainWindow(QMainWindow):
         # 日志区域（包含增量更新结果）
         self.main_layout.addLayout(self._make_section_header("操作日志"))
 
-        self.log_text = QTextEdit()
+        self.log_panel = QFrame()
+        self.log_panel.setObjectName("log-panel")
+        self.log_panel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        self.log_panel_layout = QVBoxLayout()
+        self.log_panel_layout.setContentsMargins(12, 12, 12, 12)
+        self.log_panel_layout.setSpacing(8)
+        self.log_panel.setLayout(self.log_panel_layout)
+
+        self.log_toolbar_layout = QHBoxLayout()
+        self.log_toolbar_layout.setSpacing(8)
+
+        self.log_hint_label = QLabel("按时间顺序逐行显示，最新日志默认追加到底部。")
+        self.log_hint_label.setObjectName("log-hint")
+        self.log_toolbar_layout.addWidget(self.log_hint_label, 1)
+
+        self.open_log_btn = QPushButton("打开日志文件")
+        self.open_log_btn.setObjectName("log-action")
+        self.open_log_btn.clicked.connect(self.open_log_file)
+        self.log_toolbar_layout.addWidget(self.open_log_btn)
+
+        self.clear_log_btn = QPushButton("清空面板")
+        self.clear_log_btn.setObjectName("log-action")
+        self.clear_log_btn.clicked.connect(self.clear_log_panel)
+        self.log_toolbar_layout.addWidget(self.clear_log_btn)
+
+        self.log_panel_layout.addLayout(self.log_toolbar_layout)
+
+        self.log_text = QPlainTextEdit()
+        self.log_text.setObjectName("log-view")
         self.log_text.setReadOnly(True)
-        self.log_text.setMinimumHeight(340)
+        self.log_text.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.log_text.setUndoRedoEnabled(False)
+        self.log_text.setCenterOnScroll(False)
+        self.log_text.setPlaceholderText("运行日志会显示在这里。")
+        self.log_text.document().setMaximumBlockCount(3000)
+        self.log_text.setMinimumHeight(320)
         self.log_text.setMaximumHeight(16777215)
-        self.main_layout.addWidget(self.log_text)
+        self.log_panel_layout.addWidget(self.log_text, 1)
+        self.main_layout.addWidget(self.log_panel, 1)
 
     def set_busy(self, busy: bool, status: str = ""):
         self.reset_params_btn.setEnabled(not busy)
@@ -619,7 +663,19 @@ class MainWindow(QMainWindow):
     def open_repo_groups_file(self):
         if not self._ensure_repo_groups_file():
             return
-        path = Path(self.config_file)
+        self._open_local_path(Path(self.config_file))
+
+    def open_ai_prompt_file(self):
+        prompt_path = ai.ensure_classify_prompt_file()
+        self._open_local_path(prompt_path)
+
+    def open_log_file(self):
+        self._open_local_path(get_log_file_path())
+
+    def clear_log_panel(self):
+        self.log_text.clear()
+
+    def _open_local_path(self, path: Path) -> None:
         try:
             if sys.platform == "win32":
                 os.startfile(str(path))  # type: ignore[attr-defined]
@@ -629,19 +685,6 @@ class MainWindow(QMainWindow):
                 subprocess.run(["xdg-open", str(path)], check=False)
         except Exception:
             QMessageBox.information(self, "提示", f"请手动打开文件：{path}")
-
-    def open_ai_prompt_file(self):
-        prompt_path = ai.ensure_classify_prompt_file()
-
-        try:
-            if sys.platform == "win32":
-                os.startfile(str(prompt_path))  # type: ignore[attr-defined]
-            elif sys.platform == "darwin":
-                subprocess.run(["open", str(prompt_path)], check=False)
-            else:
-                subprocess.run(["xdg-open", str(prompt_path)], check=False)
-        except Exception:
-            QMessageBox.information(self, "提示", f"请手动打开文件：{prompt_path}")
 
     def _has_existing_classification(self) -> bool:
         config_path = Path(self.config_file)
@@ -1071,7 +1114,11 @@ class MainWindow(QMainWindow):
         return f"{secs}秒"
 
     def log(self, message: str):
-        self.log_text.append(message)
+        scroll_bar = self.log_text.verticalScrollBar()
+        stick_to_bottom = scroll_bar.value() >= max(0, scroll_bar.maximum() - 4)
+        self.log_text.appendPlainText(message)
+        if stick_to_bottom or self.log_text.blockCount() <= 2:
+            scroll_bar.setValue(scroll_bar.maximum())
 
 
 
