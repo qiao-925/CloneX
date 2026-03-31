@@ -1247,3 +1247,225 @@ fatal: unable to access 'https://github.com/qiao-925/go.git/': Failed to connect
 [WARNING] [2026-03-09 03:36:32] 有 10 个仓库克隆失败
 [INFO] [2026-03-09 03:36:32] 失败列表已保存到: C:\Users\nonep\Desktop\START\repos-gui\failed-repos.txt（REPO-GROUPS.md 格式）
 [INFO] [2026-03-09 03:36:32] 可在 GUI 中选择该文件重新执行失败的仓库
+[INFO] [2026-03-31 16:46:23] 开始批量克隆，共 53 个仓库
+[INFO] [2026-03-31 16:46:23] 并行任务数: 5, 并行传输数: 8
+[INFO] [2026-03-31 16:46:26] 开始克隆: qiao-925/qiao-925 -> /home/q/Desktop/repos/github page/qiao-925
+[INFO] [2026-03-31 16:46:26] 开始克隆: qiao-925/assemble-publish-test -> /home/q/Desktop/repos/assemble/assemble-publish-test
+[INFO] [2026-03-31 16:46:26] 开始克隆: qiao-925/Extensive-Intensive-Reading -> /home/q/Desktop/repos/Personal/Extensive-Intensive-Reading
+[INFO] [2026-03-31 16:46:26] 开始克隆: qiao-925/Assemble -> /home/q/Desktop/repos/assemble/Assemble
+[INFO] [2026-03-31 16:46:26] 开始克隆: qiao-925/assemble-publish -> /home/q/Desktop/repos/assemble/assemble-publish
+[SUCCESS] [2026-03-31 16:46:28] 克隆成功: qiao-925/assemble-publish-test
+[SUCCESS] [2026-03-31 16:46:28] 克隆成功: qiao-925/assemble-publish-test
+[SUCCESS] [2026-03-31 16:46:29] 克隆成功: qiao-925/qiao-925
+[SUCCESS] [2026-03-31 16:46:29] 克隆成功: qiao-925/qiao-925
+[SUCCESS] [2026-03-31 16:46:29] 克隆成功: qiao-925/assemble-publish
+[SUCCESS] [2026-03-31 16:46:29] 克隆成功: qiao-925/assemble-publish
+[INFO] [2026-03-31 16:46:31] 开始克隆: qiao-925/start-with-drifting -> /home/q/Desktop/repos/Personal/start-with-drifting
+[INFO] [2026-03-31 16:46:32] 开始克隆: qiao-925/Building-Data-Driven-Applications-with-LlamaIndex -> /home/q/Desktop/repos/AI Stuff/Building-Data-Driven-Applications-with-LlamaIndex
+[INFO] [2026-03-31 16:46:32] 开始克隆: qiao-925/Creating-Systematology -> /home/q/Desktop/repos/AI Stuff/Creating-Systematology
+[SUCCESS] [2026-03-31 16:46:36] 克隆成功: qiao-925/start-with-drifting
+[SUCCESS] [2026-03-31 16:46:36] 克隆成功: qiao-925/start-with-drifting
+[INFO] [2026-03-31 16:46:39] 开始克隆: qiao-925/Creating-Systematology-Batch -> /home/q/Desktop/repos/AI Stuff/Creating-Systematology-Batch
+[SUCCESS] [2026-03-31 16:46:42] 克隆成功: qiao-925/Building-Data-Driven-Applications-with-LlamaIndex
+[SUCCESS] [2026-03-31 16:46:42] 克隆成功: qiao-925/Building-Data-Driven-Applications-with-LlamaIndex
+[INFO] [2026-03-31 16:46:45] 开始克隆: qiao-925/Creating-Systematology-RAG -> /home/q/Desktop/repos/AI Stuff/Creating-Systematology-RAG
+[SUCCESS] [2026-03-31 16:46:57] 克隆成功: qiao-925/Creating-Systematology-RAG
+[SUCCESS] [2026-03-31 16:46:57] 克隆成功: qiao-925/Creating-Systematology-RAG
+[INFO] [2026-03-31 16:47:00] 开始克隆: qiao-925/Creating-Systematology-Test -> /home/q/Desktop/repos/AI Stuff/Creating-Systematology-Test
+[SUCCESS] [2026-03-31 16:47:20] 克隆成功: qiao-925/Creating-Systematology-Test
+[SUCCESS] [2026-03-31 16:47:20] 克隆成功: qiao-925/Creating-Systematology-Test
+[INFO] [2026-03-31 16:47:23] 开始克隆: qiao-925/ocr-mcp-service -> /home/q/Desktop/repos/AI Stuff/ocr-mcp-service
+[SUCCESS] [2026-03-31 16:47:46] 克隆成功: qiao-925/Extensive-Intensive-Reading
+[SUCCESS] [2026-03-31 16:47:46] 克隆成功: qiao-925/Extensive-Intensive-Reading
+[INFO] [2026-03-31 16:47:49] 开始克隆: qiao-925/rag-book-demo -> /home/q/Desktop/repos/AI Stuff/rag-book-demo
+[SUCCESS] [2026-03-31 16:47:53] 克隆成功: qiao-925/rag-book-demo
+[SUCCESS] [2026-03-31 16:47:53] 克隆成功: qiao-925/rag-book-demo
+[INFO] [2026-03-31 16:47:56] 开始克隆: qiao-925/rag-in-action -> /home/q/Desktop/repos/AI Stuff/rag-in-action
+[ERROR] [2026-03-31 16:47:56] 克隆失败: qiao-925/rag-in-action
+[DEBUG] [2026-03-31 16:47:56] git clone stderr [qiao-925/rag-in-action]: Cloning into '/home/q/Desktop/repos/AI Stuff/rag-in-action'...
+fatal: unable to access 'https://github.com/qiao-925/rag-in-action.git/': gnutls_handshake() failed: TLS 链接非正常地终止了。
+[ERROR] [2026-03-31 16:47:56] 克隆失败: qiao-925/rag-in-action
+[INFO] [2026-03-31 16:47:59] 开始克隆: qiao-925/qiao-skills -> /home/q/Desktop/repos/AI Stuff/qiao-skills
+[SUCCESS] [2026-03-31 16:48:03] 克隆成功: qiao-925/qiao-skills
+[SUCCESS] [2026-03-31 16:48:03] 克隆成功: qiao-925/qiao-skills
+[INFO] [2026-03-31 16:48:06] 开始克隆: qiao-925/ants---learning -> /home/q/Desktop/repos/Go/ants---learning
+[SUCCESS] [2026-03-31 16:48:10] 克隆成功: qiao-925/ants---learning
+[SUCCESS] [2026-03-31 16:48:10] 克隆成功: qiao-925/ants---learning
+[INFO] [2026-03-31 16:48:13] 开始克隆: qiao-925/cellnet -> /home/q/Desktop/repos/Go/cellnet
+[SUCCESS] [2026-03-31 16:48:25] 克隆成功: qiao-925/cellnet
+[SUCCESS] [2026-03-31 16:48:25] 克隆成功: qiao-925/cellnet
+[INFO] [2026-03-31 16:48:28] 开始克隆: qiao-925/gin-examples -> /home/q/Desktop/repos/Go/gin-examples
+[SUCCESS] [2026-03-31 16:48:32] 克隆成功: qiao-925/gin-examples
+[SUCCESS] [2026-03-31 16:48:32] 克隆成功: qiao-925/gin-examples
+[INFO] [2026-03-31 16:48:34] 开始克隆: qiao-925/go -> /home/q/Desktop/repos/Go/go
+[SUCCESS] [2026-03-31 16:48:47] 克隆成功: qiao-925/ocr-mcp-service
+[SUCCESS] [2026-03-31 16:48:47] 克隆成功: qiao-925/ocr-mcp-service
+[INFO] [2026-03-31 16:48:50] 开始克隆: qiao-925/go-admin -> /home/q/Desktop/repos/Go/go-admin
+[SUCCESS] [2026-03-31 16:49:32] 克隆成功: qiao-925/go-admin
+[SUCCESS] [2026-03-31 16:49:32] 克隆成功: qiao-925/go-admin
+[INFO] [2026-03-31 16:49:35] 开始克隆: qiao-925/goWebActualCombat -> /home/q/Desktop/repos/Go/goWebActualCombat
+[SUCCESS] [2026-03-31 16:50:04] 克隆成功: qiao-925/Assemble
+[SUCCESS] [2026-03-31 16:50:04] 克隆成功: qiao-925/Assemble
+[INFO] [2026-03-31 16:50:07] 开始克隆: qiao-925/Go-LearnCases -> /home/q/Desktop/repos/Go/Go-LearnCases
+[SUCCESS] [2026-03-31 16:50:12] 克隆成功: qiao-925/Go-LearnCases
+[SUCCESS] [2026-03-31 16:50:12] 克隆成功: qiao-925/Go-LearnCases
+[INFO] [2026-03-31 16:50:15] 开始克隆: qiao-925/GoLearn -> /home/q/Desktop/repos/Go/GoLearn
+[SUCCESS] [2026-03-31 16:50:24] 克隆成功: qiao-925/goWebActualCombat
+[SUCCESS] [2026-03-31 16:50:24] 克隆成功: qiao-925/goWebActualCombat
+[SUCCESS] [2026-03-31 16:50:26] 克隆成功: qiao-925/GoLearn
+[SUCCESS] [2026-03-31 16:50:26] 克隆成功: qiao-925/GoLearn
+[INFO] [2026-03-31 16:50:27] 开始克隆: qiao-925/Practice-Go-by-Example- -> /home/q/Desktop/repos/Go/Practice-Go-by-Example-
+[INFO] [2026-03-31 16:50:29] 开始克隆: qiao-925/learn-go-with-tests -> /home/q/Desktop/repos/Go/learn-go-with-tests
+[SUCCESS] [2026-03-31 16:50:32] 克隆成功: qiao-925/Practice-Go-by-Example-
+[SUCCESS] [2026-03-31 16:50:32] 克隆成功: qiao-925/Practice-Go-by-Example-
+[SUCCESS] [2026-03-31 16:50:34] 克隆成功: qiao-925/Creating-Systematology-Batch
+[SUCCESS] [2026-03-31 16:50:34] 克隆成功: qiao-925/Creating-Systematology-Batch
+[INFO] [2026-03-31 16:50:35] 开始克隆: qiao-925/learngo -> /home/q/Desktop/repos/Go/learngo
+[SUCCESS] [2026-03-31 16:50:36] 克隆成功: qiao-925/Creating-Systematology
+[SUCCESS] [2026-03-31 16:50:36] 克隆成功: qiao-925/Creating-Systematology
+[SUCCESS] [2026-03-31 16:50:37] 克隆成功: qiao-925/learn-go-with-tests
+[SUCCESS] [2026-03-31 16:50:37] 克隆成功: qiao-925/learn-go-with-tests
+[INFO] [2026-03-31 16:50:37] 开始克隆: qiao-925/hugo -> /home/q/Desktop/repos/Go/hugo
+[INFO] [2026-03-31 16:50:39] 开始克隆: qiao-925/Java-Ecosystem -> /home/q/Desktop/repos/Java/Java-Ecosystem
+[INFO] [2026-03-31 16:50:40] 开始克隆: qiao-925/JavaGuide -> /home/q/Desktop/repos/Java/JavaGuide
+[SUCCESS] [2026-03-31 16:50:42] 克隆成功: qiao-925/learngo
+[SUCCESS] [2026-03-31 16:50:42] 克隆成功: qiao-925/learngo
+[SUCCESS] [2026-03-31 16:50:43] 克隆成功: qiao-925/Java-Ecosystem
+[SUCCESS] [2026-03-31 16:50:43] 克隆成功: qiao-925/Java-Ecosystem
+[INFO] [2026-03-31 16:50:45] 开始克隆: qiao-925/hippo4j -> /home/q/Desktop/repos/Java/hippo4j
+[INFO] [2026-03-31 16:50:46] 开始克隆: qiao-925/hutool -> /home/q/Desktop/repos/Java/hutool
+[SUCCESS] [2026-03-31 16:51:06] 克隆成功: qiao-925/hutool
+[SUCCESS] [2026-03-31 16:51:06] 克隆成功: qiao-925/hutool
+[SUCCESS] [2026-03-31 16:51:08] 克隆成功: qiao-925/hippo4j
+[SUCCESS] [2026-03-31 16:51:08] 克隆成功: qiao-925/hippo4j
+[INFO] [2026-03-31 16:51:08] 开始克隆: qiao-925/toBeBetterJavaer -> /home/q/Desktop/repos/Java/toBeBetterJavaer
+[INFO] [2026-03-31 16:51:11] 开始克隆: qiao-925/Strategy-pattern-demo -> /home/q/Desktop/repos/Java/Strategy-pattern-demo
+[SUCCESS] [2026-03-31 16:51:13] 克隆成功: qiao-925/Strategy-pattern-demo
+[SUCCESS] [2026-03-31 16:51:13] 克隆成功: qiao-925/Strategy-pattern-demo
+[INFO] [2026-03-31 16:51:16] 开始克隆: qiao-925/learn-rocketmq-by-cursor -> /home/q/Desktop/repos/Java/learn-rocketmq-by-cursor
+[SUCCESS] [2026-03-31 16:51:23] 克隆成功: qiao-925/learn-rocketmq-by-cursor
+[SUCCESS] [2026-03-31 16:51:23] 克隆成功: qiao-925/learn-rocketmq-by-cursor
+[INFO] [2026-03-31 16:51:26] 开始克隆: qiao-925/distribute-transaction -> /home/q/Desktop/repos/Java/distribute-transaction
+[SUCCESS] [2026-03-31 16:51:34] 克隆成功: qiao-925/distribute-transaction
+[SUCCESS] [2026-03-31 16:51:34] 克隆成功: qiao-925/distribute-transaction
+[INFO] [2026-03-31 16:51:37] 开始克隆: qiao-925/hmily -> /home/q/Desktop/repos/Java/hmily
+[SUCCESS] [2026-03-31 16:51:44] 克隆成功: qiao-925/hmily
+[SUCCESS] [2026-03-31 16:51:44] 克隆成功: qiao-925/hmily
+[INFO] [2026-03-31 16:51:47] 开始克隆: qiao-925/incubator-seata -> /home/q/Desktop/repos/Java/incubator-seata
+[SUCCESS] [2026-03-31 16:52:09] 克隆成功: qiao-925/hugo
+[SUCCESS] [2026-03-31 16:52:09] 克隆成功: qiao-925/hugo
+[INFO] [2026-03-31 16:52:12] 开始克隆: qiao-925/drools-book -> /home/q/Desktop/repos/Java/drools-book
+[SUCCESS] [2026-03-31 16:52:16] 克隆成功: qiao-925/drools-book
+[SUCCESS] [2026-03-31 16:52:16] 克隆成功: qiao-925/drools-book
+[INFO] [2026-03-31 16:52:19] 开始克隆: qiao-925/drools-in-action -> /home/q/Desktop/repos/Java/drools-in-action
+[SUCCESS] [2026-03-31 16:52:22] 克隆成功: qiao-925/drools-in-action
+[SUCCESS] [2026-03-31 16:52:22] 克隆成功: qiao-925/drools-in-action
+[INFO] [2026-03-31 16:52:25] 开始克隆: qiao-925/incubator-kie-drools -> /home/q/Desktop/repos/Java/incubator-kie-drools
+[SUCCESS] [2026-03-31 16:52:38] 克隆成功: qiao-925/JavaGuide
+[SUCCESS] [2026-03-31 16:52:38] 克隆成功: qiao-925/JavaGuide
+[SUCCESS] [2026-03-31 16:52:39] 克隆成功: qiao-925/incubator-seata
+[SUCCESS] [2026-03-31 16:52:39] 克隆成功: qiao-925/incubator-seata
+[INFO] [2026-03-31 16:52:41] 开始克隆: qiao-925/mattermost -> /home/q/Desktop/repos/Java/mattermost
+[SUCCESS] [2026-03-31 16:52:42] 克隆成功: qiao-925/go
+[SUCCESS] [2026-03-31 16:52:42] 克隆成功: qiao-925/go
+[INFO] [2026-03-31 16:52:42] 开始克隆: qiao-925/gitea -> /home/q/Desktop/repos/Java/gitea
+[INFO] [2026-03-31 16:52:45] 开始克隆: qiao-925/xxl-job -> /home/q/Desktop/repos/Java/xxl-job
+[SUCCESS] [2026-03-31 16:53:39] 克隆成功: qiao-925/xxl-job
+[SUCCESS] [2026-03-31 16:53:39] 克隆成功: qiao-925/xxl-job
+[INFO] [2026-03-31 16:53:42] 开始克隆: qiao-925/Elasticsearch-In-Action-Ref-Code -> /home/q/Desktop/repos/Java/Elasticsearch-In-Action-Ref-Code
+[SUCCESS] [2026-03-31 16:53:49] 克隆成功: qiao-925/Elasticsearch-In-Action-Ref-Code
+[SUCCESS] [2026-03-31 16:53:49] 克隆成功: qiao-925/Elasticsearch-In-Action-Ref-Code
+[INFO] [2026-03-31 16:53:52] 开始克隆: qiao-925/analysis-ik -> /home/q/Desktop/repos/Java/analysis-ik
+[SUCCESS] [2026-03-31 16:54:08] 克隆成功: qiao-925/analysis-ik
+[SUCCESS] [2026-03-31 16:54:08] 克隆成功: qiao-925/analysis-ik
+[INFO] [2026-03-31 16:54:11] 开始克隆: qiao-925/elasticsearch -> /home/q/Desktop/repos/Java/elasticsearch
+[SUCCESS] [2026-03-31 16:56:08] 克隆成功: qiao-925/gitea
+[SUCCESS] [2026-03-31 16:56:08] 克隆成功: qiao-925/gitea
+[INFO] [2026-03-31 16:56:11] 开始克隆: qiao-925/elasticsearch-in-action -> /home/q/Desktop/repos/Java/elasticsearch-in-action
+[SUCCESS] [2026-03-31 16:56:15] 克隆成功: qiao-925/elasticsearch-in-action
+[SUCCESS] [2026-03-31 16:56:15] 克隆成功: qiao-925/elasticsearch-in-action
+[INFO] [2026-03-31 16:56:18] 开始克隆: qiao-925/examples -> /home/q/Desktop/repos/Java/examples
+[SUCCESS] [2026-03-31 16:58:00] 克隆成功: qiao-925/examples
+[SUCCESS] [2026-03-31 16:58:00] 克隆成功: qiao-925/examples
+[INFO] [2026-03-31 16:58:03] 开始克隆: qiao-925/cinnamon-backup-restore -> /home/q/Desktop/repos/Tools/cinnamon-backup-restore
+[SUCCESS] [2026-03-31 16:58:12] 克隆成功: qiao-925/cinnamon-backup-restore
+[SUCCESS] [2026-03-31 16:58:12] 克隆成功: qiao-925/cinnamon-backup-restore
+[INFO] [2026-03-31 16:58:15] 开始克隆: qiao-925/geekgeekrun -> /home/q/Desktop/repos/Tools/geekgeekrun
+[SUCCESS] [2026-03-31 16:58:28] 克隆成功: qiao-925/geekgeekrun
+[SUCCESS] [2026-03-31 16:58:28] 克隆成功: qiao-925/geekgeekrun
+[INFO] [2026-03-31 16:58:31] 开始克隆: qiao-925/get_jobs -> /home/q/Desktop/repos/Tools/get_jobs
+[SUCCESS] [2026-03-31 16:59:32] 克隆成功: qiao-925/incubator-kie-drools
+[SUCCESS] [2026-03-31 16:59:32] 克隆成功: qiao-925/incubator-kie-drools
+[INFO] [2026-03-31 16:59:35] 开始克隆: qiao-925/repos-gui -> /home/q/Desktop/repos/Tools/repos-gui
+[SUCCESS] [2026-03-31 16:59:56] 克隆成功: qiao-925/mattermost
+[SUCCESS] [2026-03-31 16:59:56] 克隆成功: qiao-925/mattermost
+[INFO] [2026-03-31 16:59:59] 开始克隆: qiao-925/rust-rush -> /home/q/Desktop/repos/rust rush/rust-rush
+[SUCCESS] [2026-03-31 17:00:14] 克隆成功: qiao-925/rust-rush
+[SUCCESS] [2026-03-31 17:00:14] 克隆成功: qiao-925/rust-rush
+[SUCCESS] [2026-03-31 17:00:26] 克隆成功: qiao-925/repos-gui
+[SUCCESS] [2026-03-31 17:00:26] 克隆成功: qiao-925/repos-gui
+[SUCCESS] [2026-03-31 17:01:42] 克隆成功: qiao-925/get_jobs
+[SUCCESS] [2026-03-31 17:01:42] 克隆成功: qiao-925/get_jobs
+[SUCCESS] [2026-03-31 17:03:38] 克隆成功: qiao-925/elasticsearch
+[SUCCESS] [2026-03-31 17:03:38] 克隆成功: qiao-925/elasticsearch
+[SUCCESS] [2026-03-31 17:05:24] 克隆成功: qiao-925/toBeBetterJavaer
+[SUCCESS] [2026-03-31 17:05:24] 克隆成功: qiao-925/toBeBetterJavaer
+[INFO] [2026-03-31 17:05:24] 并行克隆执行完成，成功: 52, 失败: 1
+[INFO] [2026-03-31 17:05:24] 开始批量检查，共 52 个仓库
+[INFO] [2026-03-31 17:05:24] 并行任务数: 5
+[SUCCESS] [2026-03-31 17:05:24] 检查通过: qiao-925/assemble-publish-test
+[SUCCESS] [2026-03-31 17:05:24] 检查通过: qiao-925/qiao-925
+[SUCCESS] [2026-03-31 17:05:24] 检查通过: qiao-925/assemble-publish
+[SUCCESS] [2026-03-31 17:05:24] 检查通过: qiao-925/start-with-drifting
+[SUCCESS] [2026-03-31 17:05:24] 检查通过: qiao-925/Building-Data-Driven-Applications-with-LlamaIndex
+[SUCCESS] [2026-03-31 17:05:25] 检查通过: qiao-925/Creating-Systematology-RAG
+[SUCCESS] [2026-03-31 17:05:25] 检查通过: qiao-925/Creating-Systematology-Test
+[SUCCESS] [2026-03-31 17:05:26] 检查通过: qiao-925/Extensive-Intensive-Reading
+[SUCCESS] [2026-03-31 17:05:26] 检查通过: qiao-925/rag-book-demo
+[SUCCESS] [2026-03-31 17:05:26] 检查通过: qiao-925/qiao-skills
+[SUCCESS] [2026-03-31 17:05:26] 检查通过: qiao-925/ants---learning
+[SUCCESS] [2026-03-31 17:05:26] 检查通过: qiao-925/cellnet
+[SUCCESS] [2026-03-31 17:05:26] 检查通过: qiao-925/ocr-mcp-service
+[SUCCESS] [2026-03-31 17:05:26] 检查通过: qiao-925/gin-examples
+[SUCCESS] [2026-03-31 17:05:27] 检查通过: qiao-925/go-admin
+[SUCCESS] [2026-03-31 17:05:27] 检查通过: qiao-925/Creating-Systematology-Batch
+[SUCCESS] [2026-03-31 17:05:27] 检查通过: qiao-925/Go-LearnCases
+[SUCCESS] [2026-03-31 17:05:27] 检查通过: qiao-925/GoLearn
+[SUCCESS] [2026-03-31 17:05:27] 检查通过: qiao-925/Practice-Go-by-Example-
+[SUCCESS] [2026-03-31 17:05:28] 检查通过: qiao-925/learn-go-with-tests
+[SUCCESS] [2026-03-31 17:05:28] 检查通过: qiao-925/learngo
+[SUCCESS] [2026-03-31 17:05:28] 检查通过: qiao-925/goWebActualCombat
+[SUCCESS] [2026-03-31 17:05:28] 检查通过: qiao-925/Java-Ecosystem
+[SUCCESS] [2026-03-31 17:05:28] 检查通过: qiao-925/Assemble
+[SUCCESS] [2026-03-31 17:05:29] 检查通过: qiao-925/hippo4j
+[SUCCESS] [2026-03-31 17:05:29] 检查通过: qiao-925/Creating-Systematology
+[SUCCESS] [2026-03-31 17:05:31] 检查通过: qiao-925/JavaGuide
+[SUCCESS] [2026-03-31 17:05:31] 检查通过: qiao-925/Strategy-pattern-demo
+[SUCCESS] [2026-03-31 17:05:31] 检查通过: qiao-925/learn-rocketmq-by-cursor
+[SUCCESS] [2026-03-31 17:05:31] 检查通过: qiao-925/distribute-transaction
+[SUCCESS] [2026-03-31 17:05:31] 检查通过: qiao-925/hutool
+[SUCCESS] [2026-03-31 17:05:31] 检查通过: qiao-925/hmily
+[SUCCESS] [2026-03-31 17:05:31] 检查通过: qiao-925/drools-book
+[SUCCESS] [2026-03-31 17:05:31] 检查通过: qiao-925/drools-in-action
+[SUCCESS] [2026-03-31 17:05:31] 检查通过: qiao-925/hugo
+[SUCCESS] [2026-03-31 17:05:32] 检查通过: qiao-925/incubator-seata
+[SUCCESS] [2026-03-31 17:05:47] 检查通过: qiao-925/incubator-kie-drools
+[SUCCESS] [2026-03-31 17:05:48] 检查通过: qiao-925/xxl-job
+[SUCCESS] [2026-03-31 17:05:48] 检查通过: qiao-925/Elasticsearch-In-Action-Ref-Code
+[SUCCESS] [2026-03-31 17:05:48] 检查通过: qiao-925/analysis-ik
+[SUCCESS] [2026-03-31 17:05:52] 检查通过: qiao-925/gitea
+[SUCCESS] [2026-03-31 17:05:52] 检查通过: qiao-925/elasticsearch-in-action
+[SUCCESS] [2026-03-31 17:05:55] 检查通过: qiao-925/examples
+[SUCCESS] [2026-03-31 17:05:55] 检查通过: qiao-925/cinnamon-backup-restore
+[SUCCESS] [2026-03-31 17:05:55] 检查通过: qiao-925/geekgeekrun
+[ERROR] [2026-03-31 17:05:56] 检查失败: qiao-925/go - 检查超时
+[SUCCESS] [2026-03-31 17:05:57] 检查通过: qiao-925/repos-gui
+[SUCCESS] [2026-03-31 17:05:57] 检查通过: qiao-925/rust-rush
+[SUCCESS] [2026-03-31 17:05:58] 检查通过: qiao-925/get_jobs
+[ERROR] [2026-03-31 17:05:59] 检查失败: qiao-925/toBeBetterJavaer - 检查超时
+[ERROR] [2026-03-31 17:06:01] 检查失败: qiao-925/mattermost - 检查超时
+[ERROR] [2026-03-31 17:06:18] 检查失败: qiao-925/elasticsearch - 检查超时
+[INFO] [2026-03-31 17:06:18] 并行检查完成，通过: 48, 失败: 4
+[WARNING] [2026-03-31 17:06:18] 有 5 个仓库克隆失败
+[INFO] [2026-03-31 17:06:18] 失败列表已保存到: /home/q/Desktop/repos-gui/failed-repos.txt（REPO-GROUPS.md 格式）
+[INFO] [2026-03-31 17:06:18] 可在 GUI 中选择该文件重新执行失败的仓库

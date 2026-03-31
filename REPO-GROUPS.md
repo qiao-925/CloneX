@@ -14,7 +14,7 @@
 - Extensive-Intensive-Reading
 - start-with-drifting
 
-## AI/ML
+## AI Stuff
 - Building-Data-Driven-Applications-with-LlamaIndex
 - Creating-Systematology
 - Creating-Systematology-Batch
@@ -70,3 +70,4 @@
 
 ## rust rush
 - rust-rush
+
