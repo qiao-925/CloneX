@@ -15,6 +15,11 @@ __pycache__/
 # 忽略 Python 包元数据（pip install -e . 自动生成）
 *.egg-info/
 build/
+dist/
+
+# 忽略 PyInstaller 构建产物
+*.spec
+!CloneX.spec
 
 # 忽略 Claude Code 配置
 .claude/
