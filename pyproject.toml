@@ -31,12 +31,10 @@ dependencies = [
   "qt-material>=2.14",
   "keyring>=25.0",
   "colorama>=0.4.6; platform_system == 'Windows'",
-  "dogtail>=1.0.8",
-  "pygobject>=3.48.2",
 ]
 
 [project.urls]
-Homepage = "https://github.com/qiao-925/repos-gui"
+Homepage = "https://github.com/qiao-925/CloneX"
 
 [project.scripts]
 clonex = "gh_repos_sync.ui.main_window:main"
@@ -50,6 +48,10 @@ where = ["src"]
 [dependency-groups]
 build = [
   "pyinstaller>=6.0",
+]
+inspect = [
+  "pygobject>=3.48.2",
+  "dogtail>=1.0.8",
 ]
 
 [tool.uv]

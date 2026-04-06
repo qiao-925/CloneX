@@ -20,7 +20,7 @@ def run_smithery_command(cmd):
 
 def get_workflow_runs():
     """获取最新的工作流运行状态"""
-    cmd = '''smithery tool call github actions_list '{"method": "list_workflow_runs", "owner": "qiao-925", "repo": "repos-gui", "per_page": 5}' '''
+    cmd = '''smithery tool call github actions_list '{"method": "list_workflow_runs", "owner": "qiao-925", "repo": "CloneX", "per_page": 5}' '''
     return run_smithery_command(cmd)
 
 def format_run_info(run):

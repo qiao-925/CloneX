@@ -120,7 +120,7 @@ Gist 中的配置文件格式与本地 `REPO-GROUPS.md` 完全相同：
 
 ### 调试步骤
 
-1. 检查日志文件 `logs/gh-repos-gui.log`
+1. 检查日志文件 `logs/CloneX.log`
 2. 验证 Gist URL 格式
 3. 测试 GitHub Token 权限
 4. 清理缓存重试
@@ -159,7 +159,7 @@ python -m gh_repos_sync.cli upload-gist --gist-id YOUR_GIST_ID --token YOUR_TOKE
 - `REPO-GROUPS.md`：本地配置文件
 - `REPO-GROUPS.md.example`：配置模板
 - `.gist_cache/`：缓存目录
-- `logs/gh-repos-gui.log`：日志文件
+- `logs/CloneX.log`：日志文件
 
 ## 技术实现
 

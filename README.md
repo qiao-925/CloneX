@@ -14,7 +14,7 @@
 
 ```bash
 uv sync --group build
-uv run pyinstaller --noconfirm --clean --onefile --windowed --name gh-repos-gui --paths src gui.py
+uv run pyinstaller --noconfirm --clean --onefile --windowed --name CloneX --paths src gui.py
 ```
 
 ### 启动
@@ -22,13 +22,13 @@ uv run pyinstaller --noconfirm --clean --onefile --windowed --name gh-repos-gui 
 **Windows**
 
 ```powershell
-.\dist\gh-repos-gui.exe
+.\dist\CloneX.exe
 ```
 
 **Linux / macOS**
 
 ```bash
-chmod +x ./dist/gh-repos-gui && ./dist/gh-repos-gui
+chmod +x ./dist/CloneX && ./dist/CloneX
 ```
 
 ## 项目结构

@@ -25,11 +25,11 @@
 uv sync --group build
 
 # 构建
-uv run pyinstaller --noconfirm --clean --onefile --windowed --name gh-repos-gui --paths src gui.py
+uv run pyinstaller --noconfirm --clean --onefile --windowed --name CloneX --paths src gui.py
 
 # 运行
-./dist/gh-repos-gui  # Linux/macOS
-./dist/gh-repos-gui.exe  # Windows
+./dist/CloneX  # Linux/macOS
+./dist/CloneX.exe  # Windows
 ```
 
 ## 发布新版本

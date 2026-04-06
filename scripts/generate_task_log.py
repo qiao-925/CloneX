@@ -4,9 +4,9 @@
 Usage example:
 python scripts/generate_task_log.py \
   --task-type chore \
-  --task-name repos-gui收尾 \
+  --task-name CloneX收尾 \
   --issue-id 1 \
-  --issue-url https://github.com/qiao-925/repos-gui/issues/1
+  --issue-url https://github.com/qiao-925/CloneX/issues/1
 """
 
 from __future__ import annotations
@@ -131,7 +131,7 @@ def _build_markdown(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate and archive a closure task log")
     parser.add_argument("--task-type", default="chore")
-    parser.add_argument("--task-name", default="repos-gui收尾")
+    parser.add_argument("--task-name", default="CloneX收尾")
     parser.add_argument("--doc-type", default="任务日志")
     parser.add_argument("--trigger", default="用户明确进入收尾流程")
     parser.add_argument("--issue-id", default="-")

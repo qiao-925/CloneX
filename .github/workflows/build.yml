@@ -70,8 +70,8 @@ jobs:
         sudo apt-get install -y xvfb at-spi2-core dbus-x11 \
           gir1.2-atspi-2.0 libgirepository1.0-dev libcairo2-dev pkg-config
 
-    - name: Install Python dependencies
-      run: uv sync
+    - name: Install Python dependencies (inspect group)
+      run: uv sync --group inspect
 
     - name: Download Linux artifact
       uses: actions/download-artifact@v4
