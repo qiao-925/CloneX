@@ -4,7 +4,6 @@ import os
 import shutil
 import subprocess
 import sys
-import hashlib
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -13,7 +12,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import (
     QApplication, QFormLayout, QFrame, QHBoxLayout, QInputDialog, QLabel,
-    QLayout, QLineEdit, QMainWindow, QMessageBox, QPlainTextEdit,
+    QLayout, QMainWindow, QMessageBox, QPlainTextEdit,
     QProgressBar, QPushButton, QSizePolicy, QSpinBox, QVBoxLayout,
     QWidget
 )
@@ -33,21 +32,20 @@ except Exception:
 from ..core import repo_config
 from ..core.process_control import request_shutdown
 from ..core.repo_config import read_owner, write_owner
-from ..infra import ai, auth
+from ..infra import auth
 from ..infra.auto_gist_sync import get_auto_gist_sync
 from ..infra.logger import get_log_file_path
 from .chrome import apply_windows_dark_titlebar, build_app_icon, make_section_header
-from .gist_manager_dialog import GistManagerDialog
-from .auto_sync_dialog import AutoSyncDialog
+from .advanced_settings_dialog import AdvancedSettingsDialog
 from .theme import build_custom_stylesheet
 from .workers import (
-    AiGenerateWorker, ApplyWorker, AuthWorker, CloneWorker, PullWorker,
-    ProfileWorker, SyncWorker
+    ApplyWorker, AuthWorker, CloneWorker, LocalGenerateWorker,
+    ProfileWorker, PullWorker, SyncWorker,
 )
 
+DEFAULT_UI_SCALE = 1.0
 DEFAULT_TASKS = 5
 DEFAULT_CONNECTIONS = 8
-DEFAULT_UI_SCALE = 1.0
 MIN_UI_SCALE = 0.80
 MAX_UI_SCALE = 1.30
 UI_SCALE_STEP = 0.05
@@ -80,7 +78,9 @@ class MainWindow(QMainWindow):
         self.login_name = auth.load_cached_login() if self.token else ""
         self.public_repo_count = -1
         self.profile_silent = False
-        self.ai_generate_worker = None
+        self.local_generate_worker = None
+        self.parallel_tasks = DEFAULT_TASKS
+        self.parallel_connections = DEFAULT_CONNECTIONS
         self.ui_scale = DEFAULT_UI_SCALE
         self.current_execution_label = "克隆"
         self.startup_notices.append(f"详细日志文件：{get_log_file_path()}")
@@ -177,24 +177,10 @@ class MainWindow(QMainWindow):
         self.classify_layout.setSpacing(self._scaled(8))
         self.actions_layout.setSpacing(self._scaled(8))
 
-        self.ai_generate_btn.setMinimumHeight(self._scaled(30))
         self.incremental_btn.setMinimumHeight(self._scaled(30))
+        self.local_generate_btn.setMinimumHeight(self._scaled(30))
         self.open_file_btn.setMinimumHeight(self._scaled(30))
-        self.open_prompt_btn.setMinimumHeight(self._scaled(30))
 
-        self.params_layout.setHorizontalSpacing(self._scaled(16))
-        self.params_layout.setVerticalSpacing(self._scaled(14))
-        self.params_layout.setContentsMargins(
-            self._scaled(10), self._scaled(10), self._scaled(10), self._scaled(6)
-        )
-        self.tasks_spin.setMinimumHeight(self._scaled(38))
-        self.connections_spin.setMinimumHeight(self._scaled(38))
-        self.params_frame.setFixedHeight(self.params_layout.sizeHint().height())
-
-        self.reset_params_btn.setMinimumHeight(self._scaled(28))
-        self.clone_btn.setMinimumHeight(self._scaled(32))
-        self.pull_btn.setMinimumHeight(self._scaled(32))
-        self.retry_failed_btn.setMinimumHeight(self._scaled(32))
         self.log_panel_layout.setSpacing(self._scaled(8))
         self.log_panel_layout.setContentsMargins(
             self._scaled(12), self._scaled(12), self._scaled(12), self._scaled(12)
@@ -312,7 +298,7 @@ class MainWindow(QMainWindow):
         self.repo_count_label.setStyleSheet("font-size: 10pt;")
         self.main_layout.addWidget(self.repo_count_label)
 
-        self.flow_hint_label = QLabel("流程：1 登录  2 分类（AI全量/增量 + 手动微调）  3 开始克隆")
+        self.flow_hint_label = QLabel("流程：1 登录  2 整理（拉取/基础分类）  3 手动微调  4 开始执行")
         self.flow_hint_label.setStyleSheet("font-size: 9pt; color: #b0b0b0;")
         self.main_layout.addWidget(self.flow_hint_label)
 
@@ -320,93 +306,48 @@ class MainWindow(QMainWindow):
         self.zoom_hint_label.setStyleSheet("font-size: 9pt; color: #8d8d8d;")
         self.main_layout.addWidget(self.zoom_hint_label)
 
-        # 分类入口
-        self.main_layout.addLayout(self._make_section_header("分类"))
+        # 整理与同步入口 (原分类)
+        self.main_layout.addLayout(self._make_section_header("整理与同步"))
         self.classify_layout = QHBoxLayout()
         self.classify_layout.setSpacing(10)
 
-        self.ai_generate_btn = QPushButton("AI 自动分类（全量重建）")
-        self.ai_generate_btn.clicked.connect(self.start_ai_generate)
-        self.ai_generate_btn.setMinimumHeight(34)
-        self.ai_generate_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.ai_generate_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.classify_layout.addWidget(self.ai_generate_btn, 1)
-
-        self.incremental_btn = QPushButton("增量更新到未分类（推荐）")
+        self.incremental_btn = QPushButton("拉取新仓库 (增量到未分类)")
         self.incremental_btn.clicked.connect(self.start_incremental_update)
         self.incremental_btn.setMinimumHeight(34)
         self.incremental_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.incremental_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.classify_layout.addWidget(self.incremental_btn, 1)
 
-        self.open_file_btn = QPushButton("手动编辑")
+        self.local_generate_btn = QPushButton("自动分类 (按语言)")
+        self.local_generate_btn.clicked.connect(self.start_local_generate)
+        self.local_generate_btn.setMinimumHeight(34)
+        self.local_generate_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.local_generate_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.classify_layout.addWidget(self.local_generate_btn, 1)
+
+        self.open_file_btn = QPushButton("手动编辑分组")
         self.open_file_btn.clicked.connect(self.open_repo_groups_file)
         self.open_file_btn.setMinimumHeight(34)
         self.open_file_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.open_file_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.classify_layout.addWidget(self.open_file_btn, 1)
 
-        self.open_prompt_btn = QPushButton("编辑 AI Prompt")
-        self.open_prompt_btn.clicked.connect(self.open_ai_prompt_file)
-        self.open_prompt_btn.setMinimumHeight(34)
-        self.open_prompt_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.open_prompt_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.classify_layout.addWidget(self.open_prompt_btn, 1)
-
-        self.auto_sync_btn = QPushButton("Gist 自动同步")
-        self.auto_sync_btn.clicked.connect(self.open_auto_sync_settings)
-        self.auto_sync_btn.setMinimumHeight(34)
-        self.auto_sync_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.auto_sync_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.classify_layout.addWidget(self.auto_sync_btn, 1)
+        self.advanced_btn = QPushButton("⚙️ 高级设置...")
+        self.advanced_btn.clicked.connect(self.open_advanced_settings)
+        self.advanced_btn.setMinimumHeight(34)
+        self.advanced_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.advanced_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.classify_layout.addWidget(self.advanced_btn, 1)
 
         self.main_layout.addLayout(self.classify_layout)
 
-        classify_hint = QLabel("说明：AI 自动分类会重建分组；日常维护建议使用增量更新，再手动微调。")
+        classify_hint = QLabel("说明：按语言自动分类会覆盖未分类仓库；高级设置内包含 AI 分类、云端同步和并发控制。")
         classify_hint.setStyleSheet("font-size: 9pt; color: #9a9a9a;")
         self.main_layout.addWidget(classify_hint)
 
         self.owner_label = QLabel("仓库所有者：未检测")
         self.owner_label.setStyleSheet("font-size: 10pt;")
         self.main_layout.addWidget(self.owner_label)
-
-        # 参数设置
-        self.main_layout.addLayout(self._make_section_header("并行参数"))
-
-        self.params_frame = QFrame()
-        self.params_layout = QFormLayout()
-        self.params_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self.params_layout.setFormAlignment(Qt.AlignmentFlag.AlignLeft)
-        self.params_layout.setHorizontalSpacing(20)
-        self.params_layout.setVerticalSpacing(18)
-        self.params_layout.setContentsMargins(12, 12, 12, 8)
-        self.params_frame.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        self.params_frame.setLayout(self.params_layout)
-
-        self.tasks_spin = QSpinBox()
-        self.tasks_spin.setRange(1, 64)
-        self.tasks_spin.setValue(DEFAULT_TASKS)
-        self.tasks_spin.setMinimumHeight(42)
-        self.tasks_spin.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-
-        self.connections_spin = QSpinBox()
-        self.connections_spin.setRange(1, 64)
-        self.connections_spin.setValue(DEFAULT_CONNECTIONS)
-        self.connections_spin.setMinimumHeight(42)
-        self.connections_spin.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-
-        self.params_layout.addRow("并行任务数", self.tasks_spin)
-        self.params_layout.addRow("并行连接数", self.connections_spin)
-        self.params_frame.setFixedHeight(self.params_layout.sizeHint().height())
-        self.main_layout.addWidget(self.params_frame)
-
-        reset_params_layout = QHBoxLayout()
-        reset_params_layout.addStretch(1)
-        self.reset_params_btn = QPushButton("恢复默认参数")
-        self.reset_params_btn.clicked.connect(self.reset_params)
-        self.reset_params_btn.setMinimumHeight(30)
-        reset_params_layout.addWidget(self.reset_params_btn)
-        self.main_layout.addLayout(reset_params_layout)
 
         # 执行
         self.main_layout.addLayout(self._make_section_header("执行"))
@@ -506,22 +447,16 @@ class MainWindow(QMainWindow):
         self.main_layout.addWidget(self.log_panel, 1)
 
     def set_busy(self, busy: bool, status: str = ""):
-        self.reset_params_btn.setEnabled(not busy)
         self.clone_btn.setEnabled(not busy)
         self.pull_btn.setEnabled(not busy)
         self.retry_failed_btn.setEnabled(not busy)
         self.login_btn.setEnabled(not busy)
-        self.ai_generate_btn.setEnabled(not busy)
         self.incremental_btn.setEnabled(not busy)
+        self.local_generate_btn.setEnabled(not busy)
         self.open_file_btn.setEnabled(not busy)
-        self.open_prompt_btn.setEnabled(not busy)
-        self.auto_sync_btn.setEnabled(not busy)
+        self.advanced_btn.setEnabled(not busy)
         self.refresh_btn.setEnabled(not busy and bool(self.token))
         self.logout_btn.setEnabled(not busy and bool(self.token))
-        self.ai_generate_btn.setEnabled(not busy)
-        self.incremental_btn.setEnabled(not busy and bool(self.token))
-        self.open_file_btn.setEnabled(not busy)
-        self.open_prompt_btn.setEnabled(not busy)
 
         self.progress_bar.setVisible(busy)
         self.progress_detail_label.setVisible(busy)
@@ -544,20 +479,20 @@ class MainWindow(QMainWindow):
             self.logout_btn.setEnabled(True)
             self.login_btn.setText("重新登录")
             if self.public_repo_count >= 0:
-                self.repo_count_label.setText(f"仓库统计：{self.public_repo_count} 个公共仓库")
+                self.repo_count_label.setText(f"仓库统计：{self.public_repo_count} 个公共仓库（已自动启用 private 访问）")
             else:
                 self.repo_count_label.setText("仓库统计：未获取")
-            self._set_flow_hint("下一步：分类（AI全量/增量）并手动微调，然后开始克隆")
+            self._set_flow_hint("下一步：使用整理功能拉取仓库并微调，然后开始执行")
         else:
             self.auth_status_label.setText("登录状态：未登录")
             self.logout_btn.setEnabled(False)
             self.login_btn.setText("登录 GitHub")
             self.repo_count_label.setText("仓库统计：未获取")
-            self._set_flow_hint("流程：1 登录  2 分类（AI全量/增量 + 手动微调）  3 开始克隆")
+            self._set_flow_hint("流程：1 登录（自动包含 private）  2 整理（拉取 + 自动/手动分类）  3 开始克隆")
         if hasattr(self, "refresh_btn"):
             self.refresh_btn.setEnabled(bool(self.token))
         if hasattr(self, "incremental_btn"):
-            self.incremental_btn.setEnabled(bool(self.token))
+            self.incremental_btn.setEnabled(True)
 
     def _set_flow_hint(self, text: str) -> None:
         if hasattr(self, "flow_hint_label"):
@@ -689,10 +624,6 @@ class MainWindow(QMainWindow):
         if not self._ensure_repo_groups_file():
             return
         self._open_local_path(Path(self.config_file))
-
-    def open_ai_prompt_file(self):
-        prompt_path = ai.ensure_classify_prompt_file()
-        self._open_local_path(prompt_path)
 
     def open_gist_manager(self):
         """Open Gist configuration manager dialog."""
@@ -831,105 +762,61 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             return backup, str(exc)
 
-    def start_ai_generate(self):
-        if not self.token:
-            QMessageBox.information(self, "提示", "请先登录 GitHub")
-            return
+    def open_advanced_settings(self):
+        """Open advanced settings dialog."""
+        dialog = AdvancedSettingsDialog(self)
+        dialog.exec()
+
+    def start_local_generate(self):
+        """Use local language rules to classify repos."""
         if not self._ensure_repo_groups_file():
             return
-
-        owner = self.login_name
+            
+        owner = self._resolve_owner_for_sync()
         if not owner:
-            ok, file_owner, _ = read_owner(self.config_file)
-            if ok:
-                owner = file_owner
-        if not owner:
-            owner, ok = QInputDialog.getText(self, "仓库所有者", "请输入仓库所有者：")
-            if not ok or not owner.strip():
-                return
-            owner = owner.strip()
+            return
 
         if self._has_existing_classification():
             overwrite_reply = QMessageBox.question(
                 self,
-                "⚠️ 全量覆盖确认",
+                "⚠️ 自动分类确认",
                 "检测到 REPO-GROUPS.md 已存在分类内容。\n"
-                "继续将执行全量重建，并覆盖现有分类结果。\n\n"
+                "执行按语言自动分类将会重新归类尚未分类的仓库。\n\n"
                 "是否继续？",
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No,
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.Yes,
             )
-            if overwrite_reply != QMessageBox.Yes:
+            if overwrite_reply != QMessageBox.StandardButton.Yes:
                 return
-
-            backup_path, backup_error = self._backup_repo_groups_file()
-            if backup_error:
-                continue_reply = QMessageBox.question(
-                    self,
-                    "备份失败",
-                    f"自动备份失败：{backup_error}\n\n是否仍继续覆盖？",
-                    QMessageBox.Yes | QMessageBox.No,
-                    QMessageBox.No,
-                )
-                if continue_reply != QMessageBox.Yes:
-                    return
-            else:
-                self.log(f"🗂️ 已备份现有分类文件：{backup_path}")
-
-        api_key, _ = ai.load_api_key()
-        if not api_key:
-            api_key, ok = QInputDialog.getText(
-                self,
-                "AI 分类",
-                "请输入 DeepSeek API Key：",
-                QLineEdit.Password
-            )
-            if not ok or not api_key.strip():
-                return
-
-        try:
-            prompt_path = ai.ensure_classify_prompt_file()
-            prompt_text = prompt_path.read_text(encoding="utf-8")
-            prompt_sha = hashlib.sha1(prompt_text.encode("utf-8")).hexdigest()[:8]
-            self.log(f"🧠 AI Prompt 生效文件: {prompt_path} (sha1:{prompt_sha})")
-        except Exception as exc:
-            self.log(f"⚠️ AI Prompt 读取失败，将按默认逻辑继续: {exc}")
-            ai.save_api_key(api_key.strip())
-            api_key = api_key.strip()
 
         groups, tags = repo_config.load_groups_from_file(self.config_file)
 
-        base_url, model = ai.load_ai_config()
+        self.set_busy(True, "状态：按语言自动分类中...")
+        self.log("🤖 开始按语言自动分类（生成 REPO-GROUPS.md）...")
 
-        self.set_busy(True, "状态：AI 自动分类中...")
-        self.log("🤖 开始 AI 自动分类（生成 REPO-GROUPS.md）...")
-
-        self.ai_generate_worker = AiGenerateWorker(
+        self.local_generate_worker = LocalGenerateWorker(
             owner,
             self.token,
             self.config_file,
             groups,
-            tags,
-            api_key,
-            base_url,
-            model
+            tags
         )
-        self.ai_generate_worker.progress.connect(self.on_ai_generate_progress)
-        self.ai_generate_worker.finished.connect(self.on_ai_generate_finished)
-        self.ai_generate_worker.start()
+        self.local_generate_worker.progress.connect(self.on_generate_progress)
+        self.local_generate_worker.finished.connect(self.on_generate_finished)
+        self.local_generate_worker.start()
 
-    def on_ai_generate_progress(self, current: int, total: int):
-        self.status_label.setText(f"状态：AI 自动分类中... ({current}/{total})")
+    def on_generate_progress(self, current: int, total: int):
+        self.status_label.setText(f"状态：自动分类中... ({current}/{total})")
 
-    def on_ai_generate_finished(self, success: bool, total: int, error: str):
+    def on_generate_finished(self, success: bool, total: int, error: str):
         self.set_busy(False, "状态：就绪")
         if not success:
-            QMessageBox.critical(self, "AI 分类失败", error)
-            self.log(f"❌ AI 分类失败: {error}")
+            QMessageBox.critical(self, "分类失败", error)
+            self.log(f"❌ 分类失败: {error}")
             return
 
-        self.log(f"✅ AI 分类完成，共 {total} 个仓库")
-        QMessageBox.information(self, "完成", "AI 分类已写入 REPO-GROUPS.md，可直接手动微调")
+        self.log(f"✅ 分类完成，共 {total} 个仓库")
+        QMessageBox.information(self, "完成", "分类已写入 REPO-GROUPS.md，可直接手动微调")
         self._refresh_owner_label()
         self._set_flow_hint("下一步：手动微调分类文件，然后开始克隆")
         self.open_repo_groups_file()
@@ -965,7 +852,7 @@ class MainWindow(QMainWindow):
                             QMessageBox.warning(self, "写入失败", write_error)
                     return self.login_name
                 return ""
-            return ""
+            return self.login_name
 
         # 文件缺少 owner，默认使用登录账号
         reply = QMessageBox.question(
@@ -992,9 +879,6 @@ class MainWindow(QMainWindow):
         return self.login_name
 
     def start_incremental_update(self):
-        if not self.token:
-            QMessageBox.information(self, "提示", "请先登录 GitHub")
-            return
         if not self._ensure_repo_groups_file():
             return
 
@@ -1008,7 +892,7 @@ class MainWindow(QMainWindow):
         self.sync_worker = SyncWorker(
             self.config_file,
             owner_override=owner_override,
-            token=self.token or ""
+            token=self.token or "",
         )
         self.sync_worker.finished.connect(self.on_incremental_preview_finished)
         self.sync_worker.start()
@@ -1089,8 +973,9 @@ class MainWindow(QMainWindow):
 
         self.clone_worker = CloneWorker(
             config_file,
-            self.tasks_spin.value(),
-            self.connections_spin.value(),
+            tasks=self.parallel_tasks,
+            connections=self.parallel_connections,
+            token=self.token or "",
         )
         self.clone_worker.log_signal.connect(self.log)
         self.clone_worker.progress_signal.connect(self._set_progress)
@@ -1107,7 +992,8 @@ class MainWindow(QMainWindow):
 
         self.pull_worker = PullWorker(
             self.config_file,
-            self.tasks_spin.value(),
+            tasks=self.parallel_tasks,
+            token=self.token or "",
         )
         self.pull_worker.log_signal.connect(self.log)
         self.pull_worker.progress_signal.connect(self._set_progress)

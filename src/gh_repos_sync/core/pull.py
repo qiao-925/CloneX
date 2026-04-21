@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
+from .clone import build_git_auth_env, has_github_ssh_access
 from .process_control import is_shutdown_requested, start_tracked_process, terminate_process, untrack_process
 from ..infra.logger import log_debug, log_error, log_exception, log_info, log_success, log_warning
 
@@ -31,7 +32,7 @@ def _extract_pull_failure_reason(stderr_text: str) -> str:
     return "unknown"
 
 
-def pull_repo(repo_full: str, repo_name: str, group_folder: str) -> Tuple[bool, str]:
+def pull_repo(repo_full: str, repo_name: str, group_folder: str, token: Optional[str] = None) -> Tuple[bool, str]:
     """Run `git pull --ff-only` for one local repository."""
     if not repo_full or not repo_name or not group_folder:
         log_error("pull_repo: missing required arguments")
@@ -57,43 +58,60 @@ def pull_repo(repo_full: str, repo_name: str, group_folder: str) -> Tuple[bool, 
         "--no-stat",
         "--no-progress",
     ]
+    attempts: List[Optional[dict[str, str]]] = [None]
+    if token:
+        attempts = [build_git_auth_env(token, rewrite_ssh_urls=True)]
+        if has_github_ssh_access():
+            attempts.append(None)
 
-    try:
-        process = start_tracked_process(
-            command,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
+    for index, git_env in enumerate(attempts):
         try:
-            _, stderr_text = process.communicate()
-            result_code = process.returncode
-        finally:
-            untrack_process(process)
+            process = start_tracked_process(
+                command,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                text=True,
+                env=git_env,
+            )
+            try:
+                _, stderr_text = process.communicate()
+                result_code = process.returncode
+            finally:
+                untrack_process(process)
 
-        if is_shutdown_requested():
-            terminate_process(process)
-            log_warning(f"update canceled (app is closing): {repo_full}")
-            return False, "canceled"
+            if is_shutdown_requested():
+                terminate_process(process)
+                log_warning(f"update canceled (app is closing): {repo_full}")
+                return False, "canceled"
 
-        if result_code != 0:
+            if result_code == 0:
+                log_success(f"update success: {repo_full}")
+                return True, ""
+
             reason = _extract_pull_failure_reason(stderr_text)
-            log_error(f"update failed [{reason}]: {repo_full}")
             if stderr_text:
                 log_debug(f"git pull stderr [{repo_full}]: {stderr_text.strip()}")
+            if index + 1 < len(attempts):
+                log_info(f"token 更新失败，尝试回退到 SSH: {repo_full}")
+                continue
+
+            log_error(f"update failed [{reason}]: {repo_full}")
             return False, reason
 
-        log_success(f"update success: {repo_full}")
-        return True, ""
+        except Exception as exc:
+            log_exception(f"update exception: {repo_full}", exc)
+            if index + 1 < len(attempts):
+                log_info(f"token 更新异常，尝试回退到 SSH: {repo_full}")
+                continue
+            return False, "exception"
 
-    except Exception as exc:
-        log_exception(f"update exception: {repo_full}", exc)
-        return False, "exception"
+    return False, "unknown"
 
 
 def execute_parallel_pull(
     tasks: List[Dict[str, str]],
     parallel_tasks: int,
+    token: Optional[str] = None,
     progress_cb: Optional[Callable[[int, int, int, int], None]] = None,
 ) -> Tuple[int, int, List[Dict[str, str]]]:
     """Run pull tasks in parallel and collect summary stats."""
@@ -119,6 +137,7 @@ def execute_parallel_pull(
                 task["repo_full"],
                 task["repo_name"],
                 task["group_folder"],
+                token,
             ): task
             for task in tasks
         }

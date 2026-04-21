@@ -7,17 +7,15 @@ name = "clonex"
 version = "1.0.0"
 description = "CloneX: GitHub 仓库批量分类克隆与管理工具"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 authors = [{ name = "qiao-925" }]
 license = { text = "MIT" }
-keywords = ["github", "clone", "gui", "pyqt"]
+keywords = ["github", "clone", "gui", "pyqt", "mcp", "model-context-protocol", "agent"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
   "Topic :: Software Development :: Version Control :: Git",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -38,6 +36,12 @@ Homepage = "https://github.com/qiao-925/CloneX"
 
 [project.scripts]
 clonex = "gh_repos_sync.ui.main_window:main"
+clonex-mcp = "gh_repos_sync.mcp.server:main"
+
+[project.optional-dependencies]
+mcp = [
+  "mcp>=1.0",
+]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -53,6 +57,20 @@ inspect = [
   "pygobject>=3.48.2",
   "dogtail>=1.0.8",
 ]
+test = [
+  "pytest>=8.0",
+  "anyio>=4.0",
+  "mcp>=1.0",
+]
 
 [tool.uv]
 default-groups = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Keep tmp_path inside the workspace — %LOCALAPPDATA%\Temp is blocked by
+# Controlled Folder Access on this machine and pytest can't scandir it.
+addopts = "-ra --strict-markers --basetemp=.pytest-tmp"
+markers = [
+  "anyio: mark test as an anyio-based async test",
+]

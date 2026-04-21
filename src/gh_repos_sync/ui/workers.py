@@ -4,9 +4,9 @@ from typing import Dict, List
 
 from PyQt6.QtCore import QThread, pyqtSignal
 
-from ..application.ai_generation import generate_repo_groups_with_ai
 from ..application.execution import run_clone_and_check, run_pull_updates
-from ..core.repo_config import apply_sync, preview_sync
+from ..application.local_generation import generate_repo_groups_with_rules
+from ..application.repo_sync import apply_sync, preview_sync
 from ..infra import auth
 from ..infra.logger import get_log_state, set_log_callback
 
@@ -119,10 +119,10 @@ class ProfileWorker(QThread):
         self.finished.emit(True, login or "", public_repos, "")
 
 
-class AiGenerateWorker(QThread):
-    """AI 自动分类并生成 REPO-GROUPS.md"""
+class LocalGenerateWorker(QThread):
+    """基础规则自动分类并生成 REPO-GROUPS.md"""
 
-    progress = pyqtSignal(int, int)  # 当前块, 总块
+    progress = pyqtSignal(int, int)  # 当前进度, 总量
     finished = pyqtSignal(bool, int, str)  # 成功标志, 仓库数, 错误信息
 
     def __init__(
@@ -132,9 +132,6 @@ class AiGenerateWorker(QThread):
         config_file: str,
         groups: List[str],
         tags: Dict[str, str],
-        api_key: str,
-        base_url: str,
-        model: str,
     ):
         super().__init__()
         self.owner = owner
@@ -142,23 +139,17 @@ class AiGenerateWorker(QThread):
         self.config_file = config_file
         self.groups = groups
         self.tags = tags
-        self.api_key = api_key
-        self.base_url = base_url
-        self.model = model
 
     def run(self):
         def _progress(done: int, total: int) -> None:
             self.progress.emit(done, total)
 
-        success, total, error = generate_repo_groups_with_ai(
+        success, total, error = generate_repo_groups_with_rules(
             self.owner,
             self.token,
             self.config_file,
             self.groups,
             self.tags,
-            self.api_key,
-            self.base_url,
-            self.model,
             progress_cb=_progress,
         )
         self.finished.emit(success, total, error)
@@ -171,11 +162,12 @@ class CloneWorker(QThread):
     log_signal = pyqtSignal(str)
     progress_signal = pyqtSignal(str, int, int, int, int)
 
-    def __init__(self, config_file: str, tasks: int, connections: int):
+    def __init__(self, config_file: str, tasks: int, connections: int, token: str = ""):
         super().__init__()
         self.config_file = config_file
         self.tasks = tasks
         self.connections = connections
+        self.token = token
 
     def _log_callback(self, level: str, message: str, timestamp: str) -> None:
         self.log_signal.emit(f"[{level}] [{timestamp}] {message}")
@@ -193,6 +185,7 @@ class CloneWorker(QThread):
                 self.config_file,
                 tasks=self.tasks,
                 connections=self.connections,
+                token=self.token or None,
                 progress_cb=self._progress_callback,
             )
             self.finished.emit(success, result, error)
@@ -207,10 +200,11 @@ class PullWorker(QThread):
     log_signal = pyqtSignal(str)
     progress_signal = pyqtSignal(str, int, int, int, int)
 
-    def __init__(self, config_file: str, tasks: int):
+    def __init__(self, config_file: str, tasks: int, token: str = ""):
         super().__init__()
         self.config_file = config_file
         self.tasks = tasks
+        self.token = token
 
     def _log_callback(self, level: str, message: str, timestamp: str) -> None:
         self.log_signal.emit(f"[{level}] [{timestamp}] {message}")
@@ -227,6 +221,7 @@ class PullWorker(QThread):
             success, result, error = run_pull_updates(
                 self.config_file,
                 tasks=self.tasks,
+                token=self.token or None,
                 progress_cb=self._progress_callback,
             )
             self.finished.emit(success, result, error)

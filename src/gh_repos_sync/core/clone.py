@@ -13,6 +13,7 @@ import os
 import platform
 import shutil
 import subprocess
+import base64
 from pathlib import Path
 from typing import Optional
 
@@ -27,6 +28,51 @@ from .process_control import (
 from ..infra.logger import log_debug, log_error, log_exception, log_info, log_success
 
 
+def build_git_auth_env(token: Optional[str], rewrite_ssh_urls: bool = False) -> Optional[dict[str, str]]:
+    normalized_token = (token or "").strip()
+    if not normalized_token:
+        return None
+
+    env = os.environ.copy()
+    try:
+        config_count = int(env.get("GIT_CONFIG_COUNT", "0"))
+    except ValueError:
+        config_count = 0
+
+    basic_auth = base64.b64encode(f"x-access-token:{normalized_token}".encode("utf-8")).decode("ascii")
+    config_pairs = [
+        ("http.https://github.com/.extraheader", f"Authorization: Basic {basic_auth}"),
+    ]
+    if rewrite_ssh_urls:
+        config_pairs.extend([
+            ("url.https://github.com/.insteadOf", "git@github.com:"),
+            ("url.https://github.com/.insteadOf", "ssh://git@github.com/"),
+        ])
+
+    for key, value in config_pairs:
+        env[f"GIT_CONFIG_KEY_{config_count}"] = key
+        env[f"GIT_CONFIG_VALUE_{config_count}"] = value
+        config_count += 1
+
+    env["GIT_CONFIG_COUNT"] = str(config_count)
+    return env
+
+
+def has_github_ssh_access() -> bool:
+    try:
+        result = subprocess.run(
+            ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=2', '-T', 'git@github.com'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=3,
+            **background_subprocess_kwargs(),
+        )
+        output = result.stdout.decode() + result.stderr.decode()
+        return 'successfully authenticated' in output
+    except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+        return False
+
+
 def get_repo_url(repo_full: str) -> str:
     """检测并选择最优协议（SSH 优先，回退到 HTTPS）
     
@@ -37,20 +83,8 @@ def get_repo_url(repo_full: str) -> str:
         仓库 URL（SSH 或 HTTPS）
     """
     # 检测 SSH 是否可用（静默检测，避免输出干扰）
-    try:
-        result = subprocess.run(
-            ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=2', '-T', 'git@github.com'],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            timeout=3,
-            **background_subprocess_kwargs(),
-        )
-        # 检查输出中是否包含 "successfully authenticated"
-        output = result.stdout.decode() + result.stderr.decode()
-        if 'successfully authenticated' in output:
-            return f"git@github.com:{repo_full}.git"
-    except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
-        pass
+    if has_github_ssh_access():
+        return f"git@github.com:{repo_full}.git"
     
     # 回退到 HTTPS
     return f"https://github.com/{repo_full}.git"
@@ -120,7 +154,8 @@ def clone_repo(
     repo_full: str,
     repo_name: str,
     group_folder: str,
-    parallel_connections: int = 8
+    parallel_connections: int = 8,
+    token: Optional[str] = None,
 ) -> bool:
     """克隆单个仓库
     
@@ -197,67 +232,77 @@ def clone_repo(
         return False
     
     # 获取最优仓库 URL（SSH 优先，回退到 HTTPS）
-    repo_url = get_repo_url(repo_full)
     cpu_cores = get_cpu_cores()
+    git_env = build_git_auth_env(token)
+    repo_urls = [get_repo_url(repo_full)]
+    if token:
+        repo_urls = [f"https://github.com/{repo_full}.git"]
+        if has_github_ssh_access():
+            repo_urls.append(f"git@github.com:{repo_full}.git")
     
     # 执行克隆，使用优化的 Git 配置和并行传输参数
     log_info(f"开始克隆: {repo_full} -> {target_path}")
-    
-    # 构建 Git 命令
-    # 使用优化的 Git 配置执行克隆
-    # -c 参数临时设置配置，不影响全局 Git 配置
-    git_cmd = [
-        'git',
-        '-c', 'http.postBuffer=524288000',
-        '-c', 'http.lowSpeedLimit=0',
-        '-c', 'http.lowSpeedTime=0',
-        '-c', 'http.version=HTTP/2',
-        '-c', f'pack.windowMemory=1073741824',
-        '-c', f'pack.threads={cpu_cores}',
-        '-c', 'core.compression=1',
-        'clone',
-        '--progress',
-        '--jobs', str(parallel_connections),
-        repo_url,
-        str(target_path)
-    ]
-    
-    try:
-        process = start_tracked_process(
-            git_cmd,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
+
+    for index, repo_url in enumerate(repo_urls):
+        git_cmd = [
+            'git',
+            '-c', 'http.postBuffer=524288000',
+            '-c', 'http.lowSpeedLimit=0',
+            '-c', 'http.lowSpeedTime=0',
+            '-c', 'http.version=HTTP/2',
+            '-c', f'pack.windowMemory=1073741824',
+            '-c', f'pack.threads={cpu_cores}',
+            '-c', 'core.compression=1',
+            'clone',
+            '--progress',
+            '--jobs', str(parallel_connections),
+            repo_url,
+            str(target_path)
+        ]
+
         try:
-            _, stderr_text = process.communicate()
-            result_code = process.returncode
-        finally:
-            untrack_process(process)
+            process = start_tracked_process(
+                git_cmd,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                text=True,
+                env=git_env if repo_url.startswith("https://") else None,
+            )
+            try:
+                _, stderr_text = process.communicate()
+                result_code = process.returncode
+            finally:
+                untrack_process(process)
 
-        if is_shutdown_requested():
-            terminate_process(process)
-            log_error(f"克隆已取消（程序正在退出）: {repo_full}")
-            _cleanup_failed_directory(target_path)
-            return False
+            if is_shutdown_requested():
+                terminate_process(process)
+                log_error(f"克隆已取消（程序正在退出）: {repo_full}")
+                _cleanup_failed_directory(target_path)
+                return False
 
-        if result_code != 0:
-            log_error(f"克隆失败: {repo_full}")
+            if result_code == 0:
+                log_success(f"克隆成功: {repo_full}")
+                return True
+
             if stderr_text:
                 log_debug(f"git clone stderr [{repo_full}]: {stderr_text.strip()}")
             _cleanup_failed_directory(target_path)
+            if index + 1 < len(repo_urls):
+                log_info(f"HTTPS 克隆失败，尝试回退到 SSH: {repo_full}")
+                continue
+
+            log_error(f"克隆失败: {repo_full}")
             return False
-        
-        log_success(f"克隆成功: {repo_full}")
-        return True
-    
-    except Exception as e:
-        log_exception(f"克隆异常: {repo_full}", e)
-        
-        # 如果克隆失败，清理不完整的目录
-        _cleanup_failed_directory(target_path)
-        
-        return False
+
+        except Exception as e:
+            log_exception(f"克隆异常: {repo_full}", e)
+            _cleanup_failed_directory(target_path)
+            if index + 1 < len(repo_urls):
+                log_info(f"HTTPS 克隆异常，尝试回退到 SSH: {repo_full}")
+                continue
+            return False
+
+    return False
 
 
 def _cleanup_failed_directory(target_path: Path) -> None:

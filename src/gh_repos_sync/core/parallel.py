@@ -16,6 +16,7 @@ def execute_parallel_clone(
     tasks: List[Dict[str, str]],
     parallel_tasks: int,
     parallel_connections: int,
+    token: Optional[str] = None,
     progress_cb: Optional[Callable[[int, int, int, int], None]] = None,
 ) -> Tuple[int, int, List[Dict[str, str]]]:
     """并行执行克隆任务
@@ -53,7 +54,8 @@ def execute_parallel_clone(
                 task['repo_full'],
                 task['repo_name'],
                 task['group_folder'],
-                parallel_connections
+                parallel_connections,
+                token,
             ): task
             for task in tasks
         }
