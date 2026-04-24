@@ -1,15 +1,15 @@
-# BatchClone
+# CloneX
 
 > GitHub 多仓库批量维护工具 —— **命令行 + 桌面 GUI + MCP Server 三入口**
 
-BatchClone 提供仓库同步、批量克隆/更新、失败重试能力。工具依赖 GitHub 授权：首次使用先完成登录/授权，之后即可通过命令行一键执行。同一套业务核心同时面向**命令行**（一键默认执行）、**开发者**（PyQt6 GUI）与 **AI Agent**（MCP 协议）暴露，减少重复命令操作、提升多仓库日常维护效率。
+CloneX 面向 GitHub 多仓库日常维护，提供批量克隆、批量更新、失败重试与 Gist 同步能力。工具依赖 GitHub 授权：首次使用先完成登录/授权，之后即可通过命令行一键执行。同一套业务核心同时面向**命令行**（一键默认执行）、**开发者**（PyQt6 GUI）与 **AI Agent**（MCP 协议）暴露，减少重复命令操作、提升多仓库维护效率。
 
 ## 核心功能
 
-- **仓库同步与分类管理**：同步 GitHub 仓库列表，支持按语言自动分类、增量归档到 `未分类` 及手动维护。
-- **批量执行与一致性校验**：按分组并行克隆并执行 `git fsck` 校验，支持已克隆仓库批量更新（`git pull --ff-only`）。
-- **失败追踪与重试闭环**：自动记录失败任务清单，支持一键重试与执行结果回溯。
-- **MCP Agent 接入**：将全部能力暴露为 **14 个 MCP 工具**，分为 A（查询）/ B（分组写入）/ C（单仓执行）/ C2（批量执行）/ D（高层流程）五组；mutating 工具默认 `dry_run=true`，错误统一以 `{ok, error, message}` 返回。
+- **批量克隆与更新**：同步 GitHub 仓库列表，按需克隆或更新本地仓库。
+- **分组与失败闭环**：支持仓库分组管理，自动记录失败任务清单并支持重试。
+- **CLI 优先**：默认以命令行方式执行，适合直接安装和分发。
+- **GUI / MCP 可选**：GUI 用于复杂交互，MCP 作为独立入口用于 Agent 自动化。
 
 ## Quick Start
 
@@ -30,11 +30,13 @@ uv run clonex
 
 ### GUI
 
+GUI 作为可选入口，保留复杂交互和可视化能力。
+
 打包：
 
 ```bash
 uv sync --group build
-uv run pyinstaller --noconfirm --clean --onefile --windowed --name BatchClone --paths src gui.py
+uv run pyinstaller --noconfirm --clean --onefile --windowed --name CloneX --paths src gui.py
 ```
 
 启动：
@@ -42,7 +44,25 @@ uv run pyinstaller --noconfirm --clean --onefile --windowed --name BatchClone --
 - **Windows**：`./dist/BatchClone.exe`
 - **Linux / macOS**：`chmod +x ./dist/BatchClone && ./dist/BatchClone`
 
+### 安装发布
+
+当前仓库已补充 PyPI 发布工作流。发布后用户可通过以下方式安装并使用命令行入口：
+
+```bash
+pip install clonex
+clonex --help
+```
+
+如果你要先走测试发布，可以使用 TestPyPI 先验证：
+
+```bash
+pip install -i https://test.pypi.org/simple clonex
+clonex --help
+```
+
 ### MCP Server
+
+MCP 作为可选入口，面向 Agent / 自动化场景。
 
 开发模式（仓库源码直跑）：
 

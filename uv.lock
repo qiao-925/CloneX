@@ -308,13 +308,15 @@ dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
     { name = "keyring" },
     { name = "pygithub" },
-    { name = "pyqt6" },
-    { name = "pyqt6-webengine" },
-    { name = "qt-material" },
     { name = "requests" },
 ]
 
 [package.optional-dependencies]
+gui = [
+    { name = "pyqt6" },
+    { name = "pyqt6-webengine" },
+    { name = "qt-material" },
+]
 mcp = [
     { name = "mcp" },
 ]
@@ -340,12 +342,12 @@ requires-dist = [
     { name = "keyring", specifier = ">=25.0" },
     { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.0" },
     { name = "pygithub", specifier = ">=2.2.0" },
-    { name = "pyqt6", specifier = ">=6.6.0" },
-    { name = "pyqt6-webengine", specifier = ">=6.6.0" },
-    { name = "qt-material", specifier = ">=2.14" },
+    { name = "pyqt6", marker = "extra == 'gui'", specifier = ">=6.6.0" },
+    { name = "pyqt6-webengine", marker = "extra == 'gui'", specifier = ">=6.6.0" },
+    { name = "qt-material", marker = "extra == 'gui'", specifier = ">=2.14" },
     { name = "requests", specifier = ">=2.31.0" },
 ]
-provides-extras = ["mcp"]
+provides-extras = ["cli", "gui", "mcp"]
 
 [package.metadata.requires-dev]
 build = [{ name = "pyinstaller", specifier = ">=6.0" }]

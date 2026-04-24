@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "clonex"
 version = "1.0.0"
-description = "CloneX: GitHub 仓库批量分类克隆与管理工具"
+description = "CloneX: GitHub multi-repo maintenance tool with CLI, GUI, and MCP entrypoints"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "qiao-925" }]
-license = { text = "MIT" }
-keywords = ["github", "clone", "gui", "pyqt", "mcp", "model-context-protocol", "agent"]
+license = "MIT"
+keywords = ["github", "clone", "cli", "gui", "pyqt", "mcp", "model-context-protocol", "agent"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
