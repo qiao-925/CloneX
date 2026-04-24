@@ -1,8 +1,8 @@
-# CloneX
+# BatchClone
 
-> GitHub 多仓库批量维护工具 —— **桌面 GUI + MCP Server 双入口**
+> GitHub 多仓库批量维护工具 —— **命令行 + 桌面 GUI + MCP Server 三入口**
 
-CloneX 提供仓库同步、分类管理、批量克隆/更新、失败重试能力。同一套业务核心同时面向**开发者**（PyQt6 GUI）与 **AI Agent**（MCP 协议）暴露，减少重复命令操作、提升多仓库日常维护效率。
+BatchClone 提供仓库同步、批量克隆/更新、失败重试能力。工具依赖 GitHub 授权：首次使用先完成登录/授权，之后即可通过命令行一键执行。同一套业务核心同时面向**命令行**（一键默认执行）、**开发者**（PyQt6 GUI）与 **AI Agent**（MCP 协议）暴露，减少重复命令操作、提升多仓库日常维护效率。
 
 ## 核心功能
 
@@ -13,19 +13,34 @@ CloneX 提供仓库同步、分类管理、批量克隆/更新、失败重试能
 
 ## Quick Start
 
+### CLI
+
+默认直接执行一键拉取并克隆所有仓库：
+
+```bash
+uv run clonex
+```
+
+可选参数：
+
+- `--owner`：GitHub owner。未传时优先使用已登录账号
+- `--output`：克隆输出目录，默认 `./clonex-repos`
+- `--connections`：克隆连接数，默认 `8`
+- `--token`：手动覆盖 GitHub Token
+
 ### GUI
 
 打包：
 
 ```bash
 uv sync --group build
-uv run pyinstaller --noconfirm --clean --onefile --windowed --name CloneX --paths src gui.py
+uv run pyinstaller --noconfirm --clean --onefile --windowed --name BatchClone --paths src gui.py
 ```
 
 启动：
 
-- **Windows**：`.\dist\CloneX.exe`
-- **Linux / macOS**：`chmod +x ./dist/CloneX && ./dist/CloneX`
+- **Windows**：`./dist/BatchClone.exe`
+- **Linux / macOS**：`chmod +x ./dist/BatchClone && ./dist/BatchClone`
 
 ### MCP Server
 
@@ -64,6 +79,7 @@ npx @modelcontextprotocol/inspector uv run --extra mcp python -m gh_repos_sync.m
 ```text
 .
 ├─ gui.py                           # GUI 启动入口
+├─ src/gh_repos_sync/cli.py         # 命令行启动入口（拉取 list 并直接克隆）
 ├─ AGENTS.md                        # Agent 协作规则
 ├─ docs/                            # 文档、MCP 客户端配置示例
 ├─ scripts/

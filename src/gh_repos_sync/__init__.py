@@ -1,1 +1,1 @@
-"""GitHub repos batch sync GUI package."""
+"""CloneX package."""

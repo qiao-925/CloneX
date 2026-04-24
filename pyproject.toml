@@ -21,12 +21,9 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-  "PyQt6>=6.6.0",
-  "PyQt6-WebEngine>=6.6.0",
   "pygithub>=2.2.0",
   "requests>=2.31.0",
   "chardet>=5.0.0",
-  "qt-material>=2.14",
   "keyring>=25.0",
   "colorama>=0.4.6; platform_system == 'Windows'",
 ]
@@ -35,10 +32,17 @@ dependencies = [
 Homepage = "https://github.com/qiao-925/CloneX"
 
 [project.scripts]
-clonex = "gh_repos_sync.ui.main_window:main"
+clonex = "gh_repos_sync.cli:main"
+clonex-gui = "gh_repos_sync.ui.main_window:main"
 clonex-mcp = "gh_repos_sync.mcp.server:main"
 
 [project.optional-dependencies]
+cli = []
+gui = [
+  "PyQt6>=6.6.0",
+  "PyQt6-WebEngine>=6.6.0",
+  "qt-material>=2.14",
+]
 mcp = [
   "mcp>=1.0",
 ]
