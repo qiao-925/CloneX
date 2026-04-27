@@ -179,6 +179,8 @@ clonex --help
 
 当前不使用 TestPyPI，也不通过 tag 或 GitHub Release 自动触发发布，避免草率发布。
 
+Agent 在执行发版相关任务前，必须先按 `.windsurf/rules/clonex-release-gate.mdc` 做发布门禁评估。
+
 ## 项目结构
 
 ```text

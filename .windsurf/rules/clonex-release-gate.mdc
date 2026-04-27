@@ -1,0 +1,130 @@
+---
+description: CloneX 发布门禁规则：在涉及版本号、GitHub Release、PyPI 发布、release workflow、tag 或分发包构建时，要求 Agent 先评估 CLI 可用性、版本阶段、测试构建、发布触发方式与职责边界，避免草率发布。关键词：release, PyPI, version, tag, GitHub Release, CLI, GUI, MCP, 0.x, 1.0.0
+---
+
+# CloneX 发布门禁规则
+
+## 适用范围
+
+当任务涉及以下任一事项时，必须应用本规则：
+
+- 修改 `pyproject.toml` 版本号。
+- 修改 PyPI / GitHub Release / tag / 发布 workflow。
+- 准备或执行 `uv build`、PyPI 发布、GitHub Release。
+- 讨论是否发布 `0.x`、`1.0.0rcN`、`1.0.0`。
+- 修改 CLI / GUI / MCP 中会影响用户安装后行为的入口或契约。
+
+## 核心定位
+
+CloneX 当前发布策略以 **CLI 可用性优先**：
+
+- CLI 负责快速上手和一行命令完成主路径。
+- GUI 负责复杂管理、可视化操作和后续增强。
+- MCP 负责 Agent / 自动化调用。
+- PyPI 发布优先保障跨设备快速安装 CLI，而不是急于承诺完整产品成熟度。
+
+## 版本阶段规则
+
+| 阶段 | 含义 | 允许状态 | 发布口径 |
+|---|---|---|---|
+| `0.1.x` | 第一个可用 CLI 预发布阶段 | 主路径可用，接口仍可调整 | 可发 PyPI，但必须标明 0.x 不稳定承诺 |
+| `0.2.x` | 增加新能力阶段 | CLI 新能力或体验增强 | 每个 minor 应有明确主题 |
+| `0.3.x+` | 分入口成熟阶段 | MCP / GUI / 跨平台能力逐步成熟 | 逐步提高门禁 |
+| `1.0.0rcN` | 稳定候选 | 功能冻结，只修 bug | 用于 1.0 前真实验证 |
+| `1.0.0` | 稳定承诺 | 公共接口清晰且愿意维护兼容性 | 正式稳定版 |
+
+不得因为“功能已经能跑”就直接发布 `1.0.0`。`1.0.0` 的判断标准是公共使用契约稳定，而不是功能数量。
+
+## 公共契约
+
+发布评估时，以下都视为 CloneX 的公共契约：
+
+- CLI 命令、参数、默认值和输出路径语义。
+- `REPO-GROUPS.md` Gist 格式和自动维护行为。
+- PyPI 包名、extras、entry points。
+- MCP tools 名称、参数、响应结构。
+- GUI 启动入口和安装方式。
+
+在 `0.x` 阶段可以调整公共契约，但必须在 README 或 release notes 中明确说明。进入 `1.0.0` 后，破坏这些契约应进入 major release 评估。
+
+## PyPI 发布门禁
+
+发布到正式 PyPI 前，Agent 必须先完成并汇报以下检查：
+
+1. 版本号符合当前阶段，不复用已发布版本。
+2. README 包含安装、CLI 快速开始、验证和发布说明。
+3. `uv run --group test pytest -q` 通过。
+4. `uv build` 成功生成 sdist 和 wheel。
+5. 至少验证 `clonex --help` 可运行。
+6. 对 CLI 主路径变更，必须说明是否已做真实低并发 smoke，或明确为什么暂不做。
+7. 发布 workflow 不应由 tag / GitHub Release 自动触发正式 PyPI，除非用户明确要求恢复自动化。
+8. 正式发布前必须向用户确认，不得擅自发布 PyPI。
+
+## GitHub Release 与 tag 规则
+
+- GitHub Release 基于 Git tag，代表一个可供用户下载和引用的源码快照。
+- 在当前策略下，tag 不自动触发 PyPI 发布。
+- 创建 `v*` tag 前，必须确认对应版本已经通过 PyPI 发布门禁。
+- 删除或重建 tag 属于高风险操作，必须先说明影响并获得用户明确确认。
+
+## TestPyPI 策略
+
+当前 CloneX 策略是不使用 TestPyPI，全部走正式 PyPI 的手动发布流程。
+
+如果未来要恢复 TestPyPI，必须先更新本规则和发布 workflow，并区分：
+
+- `TEST_PYPI_API_TOKEN`
+- `PYPI_API_TOKEN`
+
+不得混用两个索引的 token。
+
+## 版本递增判断
+
+| 变更类型 | `0.x` 推荐 | `1.0` 后推荐 |
+|---|---|---|
+| 文档、小修正 | patch，例如 `0.1.1` | patch，例如 `1.0.1` |
+| CLI bugfix | patch | patch |
+| CLI 新能力 | minor，例如 `0.2.0` | minor，例如 `1.1.0` |
+| CLI 参数语义改变 | minor，并说明破坏性 | major |
+| Gist 格式变更 | minor，并说明迁移影响 | major，除非完全兼容 |
+| MCP tool 新增 | minor | minor |
+| MCP tool 删除/改名 | minor，并说明破坏性 | major |
+| GUI 可视化增强 | minor | minor |
+| 安全修复 | patch，并说明风险 | patch，必要时允许兼容性例外 |
+
+## Agent 行为要求
+
+当用户提出“发布”“发版”“打 tag”“上 PyPI”“改版本号”时，Agent 必须：
+
+1. 先识别发布目标：CLI 试用、正式 PyPI、GitHub Release、1.0 候选或稳定版。
+2. 先做门禁评估，再改版本号或执行发布动作。
+3. 优先保持 CLI 主路径简单可用，不把 GUI/MCP 的复杂度塞进 CLI。
+4. 对 GUI / MCP 的变更，明确其职责边界，不影响 CLI 快速上手体验。
+5. 对高风险操作（发布 PyPI、删 tag、重写历史）必须单独请求确认。
+6. 输出结果时必须说明：当前版本阶段、已通过检查、未完成检查、是否建议发布。
+
+## 禁止事项
+
+- 禁止在用户未明确确认时发布正式 PyPI。
+- 禁止把未充分验证的版本标记为 `1.0.0`。
+- 禁止通过 tag 或 GitHub Release 自动发布正式 PyPI，除非规则和 workflow 已明确恢复该策略。
+- 禁止复用已发布到 PyPI 的版本号。
+- 禁止把 CLI 做成复杂管理工具；复杂管理优先放到 GUI，Agent 自动化优先放到 MCP。
+
+## 推荐发布评估输出模板
+
+```md
+## Release Gate
+
+- **目标版本**：0.1.0
+- **发布目标**：正式 PyPI / GitHub Release / 仅 tag / 不发布
+- **版本阶段判断**：0.x 预发布，公共契约尚未稳定
+- **CLI 主路径**：通过 / 未验证
+- **测试**：通过 / 未通过 / 未执行
+- **构建**：通过 / 未通过 / 未执行
+- **README**：已覆盖 / 需补充
+- **Smoke**：已执行 / 建议执行 / 暂不需要
+- **风险**：...
+- **结论**：建议发布 / 暂缓发布
+- **需要用户确认的动作**：...
+```
