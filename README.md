@@ -1,237 +1,220 @@
-# CloneX
+﻿# CloneX
 
-> GitHub 多仓库批量维护工具 —— **命令行 + 桌面 GUI + MCP Server 三入口**
+> GitHub 多仓库批量维护工具 —— **CLI + GUI + MCP Server**
 
-CloneX 面向 GitHub 多仓库日常维护，提供批量克隆、批量更新、失败重试与 Gist 同步能力。工具依赖 GitHub 授权：首次使用先完成登录/授权，之后即可通过命令行一键执行。同一套业务核心同时面向**命令行**（一键默认执行）、**开发者**（PyQt6 GUI）与 **AI Agent**（MCP 协议）暴露，减少重复命令操作、提升多仓库维护效率。
+CloneX 面向需要长期维护很多 GitHub 仓库的开发者。它用一个 `REPO-GROUPS.md` Gist 管理仓库分组，然后一条命令把本地仓库树同步出来：按组克隆、追加未分类仓库，并为每个分组生成 IDE workspace。
 
 ## 核心功能
 
-- **Gist 驱动的分组管理**：仓库分组配置存放在 GitHub Gist（`REPO-GROUPS.md`），CLI 自动发现/创建并维护这份配置。
-- **按组并行克隆**：每个分组独立成一个本地子目录，符合"打开一组项目"的工作流。
-- **自动生成 IDE workspace**：每个分组内自动生成 `<group>.code-workspace`，VS Code / Cursor / Windsurf 一键打开整个组。
-- **自动追加未分类**：GitHub 上新增的仓库会自动追加到 gist 的"未分类"组，等用户手动归位。
-- **CLI / GUI / MCP 三入口**：同一套业务核心，CLI 一键自动化，GUI 用于复杂交互，MCP 给 Agent 调用。
+- **Gist 驱动分组**：自动发现或创建 `REPO-GROUPS.md` Gist，并把它作为仓库分组事实来源。
+- **自动追加未分类**：GitHub 上新增但未写入 Gist 的仓库会自动进入 `未分类` 组。
+- **按组批量克隆**：按 Gist 分组创建本地目录，支持仓库级并行和单仓库 Git 并行连接。
+- **安全路径处理**：分组名会转换为安全目录名，例如 `AI / Agents` 会落盘为 `AI _ Agents`。
+- **IDE workspace**：每个分组自动生成 `<group>.code-workspace`，方便 VS Code / Cursor / Windsurf 一键打开。
+- **三入口复用核心能力**：CLI 面向自动化，GUI 面向人工操作，MCP Server 面向 Agent 调用。
 
-## Quick Start
+## 安装
 
-### CLI
-
-零参数即可运行——CLI 会自动发现/创建 gist、同步仓库列表、按组克隆、生成 workspace：
-
-```bash
-uv run clonex
-```
-
-执行流程：
-
-1. 用缓存的 GitHub Token 解析 owner。
-2. 发现你账号下的 `REPO-GROUPS.md` gist；若不存在则自动创建一个私有 gist（含初始模板）。
-3. 把 GitHub 上新增的、gist 还没有的仓库追加到 `## 未分类` 组。
-4. 解析 gist 内容，按组并行克隆到 `./clonex-repos/<组名>/<repo>/`。
-5. 在每个组目录下生成 `<组名>.code-workspace`，引用该组所有 repo（相对路径）。
-6. 最后打印 gist URL，方便你下次跑之前去 gist 里调整分组。
-
-可选参数：
-
-- `--owner`：GitHub owner。未传时优先使用已登录账号
-- `--output`：克隆输出目录，默认 `./clonex-repos`
-- `--tasks`：仓库级并行数，默认 `10`
-- `--connections`：单仓库 Git 连接数，默认 `20`
-- `--token`：手动覆盖 GitHub Token
-
-> CLI 不提供"自动分类"——它只追加新仓库到"未分类"。具体分到哪个组，由你直接编辑 gist 决定。
-
-### GUI
-
-GUI 作为可选入口，保留复杂交互和可视化能力。
-
-打包：
-
-```bash
-uv sync --group build
-uv run pyinstaller --noconfirm --clean --onefile --windowed --name CloneX --paths src gui.py
-```
-
-启动：
-
-- **Windows**：`./dist/BatchClone.exe`
-- **Linux / macOS**：`chmod +x ./dist/BatchClone && ./dist/BatchClone`
-
-### 安装发布
-
-当前仓库已补充 PyPI 发布工作流。发布后用户可通过以下方式安装并使用命令行入口：
+推荐从 PyPI 安装 CLI：
 
 ```bash
 pip install clonex
 clonex --help
 ```
 
-如果你要先走测试发布，可以使用 TestPyPI 先验证：
+按需安装可选入口：
 
 ```bash
-pip install -i https://test.pypi.org/simple clonex
-clonex --help
+pip install "clonex[gui]"   # 提供 clonex-gui
+pip install "clonex[mcp]"   # 提供 clonex-mcp
 ```
 
-### MCP Server
+源码开发：
 
-MCP 作为可选入口，面向 Agent / 自动化场景。
+```bash
+uv sync
+uv run clonex --help
+```
 
-开发模式（仓库源码直跑）：
+## 快速开始
+
+### CLI 一键同步
+
+```bash
+clonex
+```
+
+首次运行需要 GitHub 授权。可以先通过 GUI 完成登录，也可以显式传入 token：
+
+```bash
+clonex --token <github-token>
+```
+
+常用参数：
+
+```bash
+clonex --output ./clonex-repos --tasks 10 --connections 20
+```
+
+- `--owner`：GitHub owner。未传时优先使用已登录账号。
+- `--output`：克隆输出目录，默认 `./clonex-repos`。
+- `--tasks`：仓库级并行数，默认 `10`。
+- `--connections`：单仓库 Git 连接数，默认 `20`。
+- `--token`：手动覆盖 GitHub Token。
+
+执行流程：
+
+1. 读取 GitHub Token 并解析 owner。
+2. 自动发现或创建 `REPO-GROUPS.md` Gist。
+3. 将 GitHub 新增仓库追加到 `## 未分类`。
+4. 解析 Gist，按组克隆到 `./clonex-repos/<safe-group>/<repo>/`。
+5. 为每个组生成 `<group>.code-workspace`。
+6. 打印 Gist URL，方便继续手动调整分组。
+
+> CloneX 不做自动分类。它只负责把新增仓库追加到 `未分类`，具体分组由你编辑 Gist 决定。
+
+### Gist 分组格式
+
+CloneX 使用 `REPO-GROUPS.md` 作为分组事实来源。最小格式：
+
+```md
+# GitHub 仓库分组
+
+仓库所有者: qiao-925
+
+## Personal
+- typing-hub
+- mobile-typing
+
+## AI / Agents
+- news-digest
+```
+
+上面的 `AI / Agents` 会落盘为 `AI _ Agents`，避免 `/` 被系统解释为路径分隔符。
+
+## GUI
+
+安装并启动：
+
+```bash
+pip install "clonex[gui]"
+clonex-gui
+```
+
+本地打包：
+
+```bash
+uv sync --group build
+uv run pyinstaller --noconfirm --clean --onefile --windowed --name CloneX --paths src gui.py
+```
+
+打包产物：
+
+- **Windows**：`./dist/CloneX.exe`
+- **Linux / macOS**：`chmod +x ./dist/CloneX && ./dist/CloneX`
+
+## MCP Server
+
+MCP Server 面向 Agent / 自动化场景。
+
+安装并启动：
+
+```bash
+pip install "clonex[mcp]"
+clonex-mcp
+```
+
+源码开发模式：
 
 ```bash
 uv run --extra mcp python -m gh_repos_sync.mcp
 ```
 
-客户端接入示例（Claude Desktop / Cursor / Windsurf）见 `docs/mcp_config_dev.json` 与 `docs/mcp_config_uvx.json`，完整使用与调试指南见 `docs/MCP-GUIDE.md`。
+客户端接入示例见 `docs/mcp_config_dev.json` 与 `docs/mcp_config_uvx.json`。完整说明见 `docs/MCP-GUIDE.md`。
 
-### 测试
+## 开发与验证
 
 ```bash
-uv run --group test pytest                         # 94 cases in-memory 单测（~3 秒）
-uv run --group test python scripts/mcp_smoke.py    # 真 keyring 凭据 + 真 GitHub API smoke
+uv sync --group test
+uv run --group test pytest -q
+uv build
 ```
 
-交互式调试（MCP Inspector）：
+可选 smoke：
+
+```bash
+uv run --group test python scripts/mcp_smoke.py
+```
+
+交互式调试 MCP：
 
 ```bash
 npx @modelcontextprotocol/inspector uv run --extra mcp python -m gh_repos_sync.mcp
 ```
 
-## 文档
+## 发布到 PyPI
 
-| 文档 | 用途 |
-|------|------|
-| `AGENTS.md` | Agent 协作规则（分层约束、重打包规则） |
-| `docs/MCP-GUIDE.md` | MCP Server 使用、测试与调试三层策略 |
-| `docs/BUILD.md` | 打包细节 |
-| `docs/GIST-CONFIG-GUIDE.md` | Gist 云同步配置 |
+当前包名：`clonex`。
+
+发布前本地检查：
+
+```bash
+uv run --group test pytest -q
+uv build
+```
+
+推荐流程：
+
+1. 更新 `pyproject.toml` 的版本号，例如 `1.0.3`。
+2. 提交并推送版本修改。
+3. 在 GitHub Actions 手动运行 `Publish Package`，选择 `testpypi`。
+4. 用隔离环境安装 TestPyPI 包验证：
+
+```bash
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple clonex==1.0.3
+clonex --help
+```
+
+5. 确认无误后，在 GitHub Actions 手动运行 `Publish Package`，选择 `pypi`。
+6. 或者创建并推送正式 tag，例如 `v1.0.3`，由 tag workflow 发布到 PyPI。
+
+发布凭据建议：
+
+- `TEST_PYPI_API_TOKEN`：仅用于 TestPyPI。
+- `PYPI_API_TOKEN`：仅用于正式 PyPI。
 
 ## 项目结构
 
 ```text
 .
 ├─ gui.py                           # GUI 启动入口
-├─ src/gh_repos_sync/cli.py         # 命令行启动入口（gist 驱动，按组克隆 + 生成 workspace）
-├─ AGENTS.md                        # Agent 协作规则
+├─ src/gh_repos_sync/cli.py         # CLI 启动入口
 ├─ docs/                            # 文档、MCP 客户端配置示例
-├─ scripts/
-│  ├─ inspect_ui.py                 # AT-SPI UI 自检脚本
-│  ├─ monitor_github.py             # GitHub Actions 监控
-│  ├─ mcp_smoke.py                  # MCP 端到端 smoke 测试
-│  ├─ rebuild-run.ps1               # 一键重打包并运行（Windows）
-│  └─ watch-rebuild-run.ps1         # 监听文件变化后重打包运行
-├─ tests/
-│  ├─ mcp/                          # MCP 工具 in-memory 单测
-│  ├─ test_workspace.py             # .code-workspace 生成单测
-│  ├─ test_gist_discover.py         # gist 自动发现/创建单测
-│  ├─ test_sync_with_remote.py      # GitHub→gist 未分类同步单测
-│  ├─ test_cli_paths.py             # CLI 输出路径规整单测
-│  ├─ test_clone_errors.py          # git clone 失败详情提取单测
-│  └─ test_repo_group_paths.py      # 分组目录路径安全化单测
-└─ src/
-   └─ gh_repos_sync/
-      ├─ ui/                        # 界面与交互层（GUI 入口）
-      │  ├─ main_window.py          # 主窗口与主流程入口
-      │  ├─ workers.py              # 后台任务线程
-      │  ├─ auto_sync_dialog.py     # Gist 自动同步设置对话框
-      │  ├─ gist_manager_dialog.py  # Gist 管理对话框
-      │  ├─ theme.py                # 主题样式
-      │  └─ chrome.py               # 窗口外观
-      ├─ mcp/                       # MCP Server（Agent 入口）
-      │  ├─ server.py               # 注册工具并启动 stdio
-      │  ├─ app.py                  # FastMCP 单例
-      │  ├─ context.py              # token / 路径共享助手
-      │  ├─ errors.py               # 统一错误码与响应封装
-      │  └─ tools/                  # A 查询 / B 分组写入 / C 单仓 / C2 批量 / D 流程
-      ├─ application/               # 用例编排层
-      │  ├─ local_generation.py     # 按语言规则分类流程
-      │  ├─ sync_with_remote.py     # 把 GitHub 新增 repo 追加到 gist 未分类
-      │  └─ execution.py            # 克隆/更新执行流程
-      ├─ core/                      # 核心能力层
-      │  ├─ repo_config.py          # 分组文件读写与 Gist 同步
-      │  ├─ workspace.py            # 每组生成 .code-workspace
-      │  ├─ clone.py                # 单仓库克隆
-      │  ├─ pull.py                 # 单仓库更新
-      │  ├─ parallel.py             # 并行任务调度
-      │  ├─ check.py                # 仓库完整性校验
-      │  ├─ failed_repos.py         # 失败仓库记录
-      │  └─ process_control.py      # 执行过程控制
-      ├─ domain/                    # 领域规则层
-      │  ├─ models.py               # 领域模型
-      │  └─ repo_groups.py          # 分组解析与渲染
-      └─ infra/                     # 基础设施层
-         ├─ auth.py                 # GitHub OAuth 授权
-         ├─ github_api.py           # GitHub API 封装
-         ├─ gist_config.py          # Gist 配置管理（含自动发现/创建）
-         ├─ auto_gist_sync.py       # 自动 Gist 同步
-         ├─ logger.py               # 日志
-         └─ paths.py                # 运行路径
+├─ scripts/                         # smoke、打包和辅助脚本
+├─ tests/                           # 单元测试与 MCP 测试
+└─ src/gh_repos_sync/
+   ├─ ui/                           # GUI 入口与界面
+   ├─ mcp/                          # MCP Server 与工具注册
+   ├─ application/                  # 用例编排层
+   ├─ core/                         # 克隆、更新、workspace、并行执行
+   ├─ domain/                       # 分组解析、渲染与领域模型
+   └─ infra/                        # GitHub API、Gist、认证、日志、路径
 ```
 
 依赖方向：`ui / mcp → application → core / domain → infra`
 
-## 可读性优化计划
-
-以下计划优先围绕“让新成员更快读懂项目、让维护者更快定位逻辑”展开，按低风险到高收益排序执行。
-
-### 第一阶段：快速提升结构可读性
-
-1. **补一份项目总览**
-   - 明确这套工具解决什么问题、三入口分别适合什么场景。
-   - 用一段话说明 CLI / GUI / MCP 的关系，减少读者在入口之间来回切换。
-
-2. **统一目录职责描述**
-   - 保证 `ui`、`mcp`、`application`、`core`、`domain`、`infra` 的边界一致。
-   - 把“功能说明”写成“职责说明”，避免目录注释和实际代码职责不一致。
-
-3. **收敛入口说明**
-   - 保留一个“推荐使用方式”，其余入口作为可选方案。
-   - 避免读者第一次进入 README 时同时看到过多启动路径。
-
-### 第二阶段：降低代码阅读成本
-
-4. **整理命名一致性**
-   - 统一仓库、分组、同步、任务、流程等核心名词。
-   - 避免同一概念在 CLI、GUI、MCP 中出现不同叫法。
-
-5. **拆解高复杂度模块**
-   - 优先检查主窗口、批量执行、Gist 同步、失败重试等逻辑。
-   - 把“流程编排”和“具体执行”分离，减少单文件横跨过多职责。
-
-6. **补充关键注释与设计说明**
-   - 重点解释为什么要这样设计，而不是重复代码做了什么。
-   - 在复杂分支、特殊兼容逻辑、失败兜底处补足上下文。
-
-### 第三阶段：建立长期约束
-
-7. **固化规范**
-   - 增加命名、目录、错误处理、注释风格的约定。
-   - 让后续新代码直接按统一规范进入，减少回潮。
-
-8. **把可读性纳入检查流程**
-   - 在 review 或自检时增加“是否职责单一、命名清晰、入口明确”的检查项。
-   - 对新增文件和大改动优先要求附带说明。
-
-### 执行原则
-
-- 先改“读者第一眼会困惑”的地方，再改细节。
-- 先统一结构和入口，再统一命名和实现。
-- 以小步迭代为主，避免一次性大重构影响稳定性。
-- 每次修改后都回看 README 与目录是否仍然自洽。
-
-### 建议验收标准
-
-- 新人能在 5 分钟内说清项目入口和分层。
-- 每个目录都能用一句话准确描述职责。
-- 核心流程无需依赖口头解释即可定位到对应文件。
-- 复杂逻辑有足够上下文，读代码时不需要反复猜测。
-
 ## 依赖
 
-- **Python** `>=3.10`
-- **GUI**：`PyQt6`、`PyQt6-WebEngine`、`qt-material`
+- **Python**：`>=3.10`
 - **GitHub / 存储**：`pygithub`、`requests`、`keyring`、`chardet`
-- **MCP**（可选，`uv sync --extra mcp`）：`mcp>=1.0`
-- **打包**（`uv sync --group build`）：`pyinstaller`
-- **测试**（`uv sync --group test`）：`pytest`、`anyio`、`mcp`
+- **GUI 可选依赖**：`PyQt6`、`PyQt6-WebEngine`、`qt-material`
+- **MCP 可选依赖**：`mcp>=1.0`
+- **构建工具**：`setuptools`、`wheel`、`uv`
+
+## 文档
+
+| 文档 | 用途 |
+|------|------|
+| `docs/MCP-GUIDE.md` | MCP Server 使用、测试与调试 |
+| `docs/BUILD.md` | 打包细节 |
+| `docs/GIST-CONFIG-GUIDE.md` | Gist 云同步配置 |
