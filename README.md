@@ -88,7 +88,7 @@ uv run --extra mcp python -m gh_repos_sync.mcp
 ### 测试
 
 ```bash
-uv run --group test pytest                         # ~80 cases in-memory 单测（~3 秒）
+uv run --group test pytest                         # 94 cases in-memory 单测（~3 秒）
 uv run --group test python scripts/mcp_smoke.py    # 真 keyring 凭据 + 真 GitHub API smoke
 ```
 
@@ -125,7 +125,10 @@ npx @modelcontextprotocol/inspector uv run --extra mcp python -m gh_repos_sync.m
 │  ├─ mcp/                          # MCP 工具 in-memory 单测
 │  ├─ test_workspace.py             # .code-workspace 生成单测
 │  ├─ test_gist_discover.py         # gist 自动发现/创建单测
-│  └─ test_sync_with_remote.py      # GitHub→gist 未分类同步单测
+│  ├─ test_sync_with_remote.py      # GitHub→gist 未分类同步单测
+│  ├─ test_cli_paths.py             # CLI 输出路径规整单测
+│  ├─ test_clone_errors.py          # git clone 失败详情提取单测
+│  └─ test_repo_group_paths.py      # 分组目录路径安全化单测
 └─ src/
    └─ gh_repos_sync/
       ├─ ui/                        # 界面与交互层（GUI 入口）

@@ -9,7 +9,7 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 from .clone import clone_repo
 from .process_control import is_shutdown_requested
-from ..infra.logger import log_error, log_info, log_success, log_warning
+from ..infra.logger import log_error, log_info, log_warning
 
 
 def execute_parallel_clone(
@@ -70,11 +70,9 @@ def execute_parallel_clone(
                 success = future.result()
                 if success:
                     success_count += 1
-                    log_success(f"克隆成功: {task['repo_full']}")
                 else:
                     fail_count += 1
                     failed_tasks.append(task)
-                    log_error(f"克隆失败: {task['repo_full']}")
             except Exception as e:
                 fail_count += 1
                 failed_tasks.append(task)

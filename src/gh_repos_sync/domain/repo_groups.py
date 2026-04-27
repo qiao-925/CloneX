@@ -13,6 +13,41 @@ GROUP_HEADER_PATTERN = re.compile(r"^##\s+(.+?)(?:\s*<!--\s*(.+?)\s*-->)?\s*$")
 REPO_LINE_PATTERN = re.compile(r"^\s*-\s+(\S+)", re.MULTILINE)
 
 
+# Characters that would break a single path segment on Windows or Linux.
+# Group names like ``AI / Agents`` need these stripped before they become
+# directory or filename parts; otherwise the slash gets interpreted as a
+# path separator and ``mkdir`` blows up with ENOENT/WinError 3.
+_PATH_SEGMENT_REPLACEMENTS = str.maketrans(
+    {
+        "/": "_",
+        "\\": "_",
+        ":": "_",
+        "*": "_",
+        "?": "_",
+        '"': "_",
+        "<": "_",
+        ">": "_",
+        "|": "_",
+    }
+)
+
+
+def sanitize_path_segment(name: str) -> str:
+    """Make ``name`` safe to use as a single filesystem path segment.
+
+    Replaces illegal characters, collapses repeated underscores, trims
+    leading/trailing separators, and falls back to ``"unnamed"`` for
+    empty inputs. Whitespace and unicode are preserved so directories
+    keep their human-readable shape.
+    """
+
+    cleaned = (name or "").strip().translate(_PATH_SEGMENT_REPLACEMENTS)
+    cleaned = re.sub(r"_+", "_", cleaned)
+    # Windows additionally forbids trailing dots and spaces in segments.
+    cleaned = cleaned.strip(" _.")
+    return cleaned or "unnamed"
+
+
 def extract_owner(content: str) -> str:
     """Extract repository owner from markdown content."""
     match = OWNER_PATTERN.search(content)
@@ -57,10 +92,15 @@ def parse_groups_and_tags(content: str) -> Tuple[List[str], Dict[str, str]]:
 
 
 def get_group_folder(base_repos_dir: Path, group_name: str, highland: Optional[str] = None) -> Path:
-    """Build local folder path for a group."""
+    """Build local folder path for a group, sanitising the segment so that
+    names containing ``/``, ``\\``, ``:`` and friends still produce a valid
+    directory on every OS."""
+
+    safe_group = sanitize_path_segment(group_name)
     if highland:
-        return base_repos_dir / f"{group_name} ({highland})"
-    return base_repos_dir / group_name
+        safe_highland = sanitize_path_segment(highland)
+        return base_repos_dir / f"{safe_group} ({safe_highland})"
+    return base_repos_dir / safe_group
 
 
 def parse_repo_tasks(content: str, owner: str, base_repos_dir: Path) -> List[RepoTask]:
@@ -201,6 +241,7 @@ __all__ = [
     "OWNER_PATTERN",
     "GROUP_HEADER_PATTERN",
     "REPO_LINE_PATTERN",
+    "sanitize_path_segment",
     "extract_owner",
     "extract_existing_repos",
     "parse_groups_and_tags",

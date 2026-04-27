@@ -284,14 +284,17 @@ def clone_repo(
                 log_success(f"克隆成功: {repo_full}")
                 return True
 
-            if stderr_text:
-                log_debug(f"git clone stderr [{repo_full}]: {stderr_text.strip()}")
+            stderr_clean = (stderr_text or "").strip()
+            if stderr_clean:
+                log_debug(f"git clone stderr [{repo_full}]: {stderr_clean}")
             _cleanup_failed_directory(target_path)
             if index + 1 < len(repo_urls):
                 log_info(f"HTTPS 克隆失败，尝试回退到 SSH: {repo_full}")
                 continue
 
-            log_error(f"克隆失败: {repo_full}")
+            detail_text = _extract_git_error_detail(stderr_clean)
+            detail = f" - {detail_text}" if detail_text else ""
+            log_error(f"克隆失败: {repo_full}{detail}")
             return False
 
         except Exception as e:
@@ -303,6 +306,27 @@ def clone_repo(
             return False
 
     return False
+
+
+def _extract_git_error_detail(stderr_text: str, max_length: int = 500) -> str:
+    lines = [line.strip() for line in (stderr_text or "").replace("\r", "\n").splitlines()]
+    lines = [line for line in lines if line]
+    if not lines:
+        return ""
+
+    key_prefixes = ("error:", "fatal:", "remote:", "ssh:", "permission denied")
+    key_lines = [line for line in lines if line.lower().startswith(key_prefixes)]
+    selected = key_lines[-2:] if key_lines else lines[-1:]
+
+    deduped = []
+    for line in selected:
+        if line not in deduped:
+            deduped.append(line)
+
+    detail = " ; ".join(deduped)
+    if len(detail) > max_length:
+        return detail[: max_length - 1].rstrip() + "…"
+    return detail
 
 
 def _cleanup_failed_directory(target_path: Path) -> None:

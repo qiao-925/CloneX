@@ -29,6 +29,7 @@ dist/
 .venv/
 
 repos
+tmp-clonex-smoke/
 
 failed-repos.txt
 

@@ -94,6 +94,15 @@ def _resolve_owner(owner: Optional[str], token: Optional[str]) -> str:
     return ""
 
 
+def _normalize_output_path_arg(output: str) -> Path:
+    raw_output = (output or "").strip()
+    while raw_output and raw_output[-1] in (".", " "):
+        raw_output = raw_output[:-1]
+    if not raw_output:
+        raw_output = str(DEFAULT_OUTPUT_DIR)
+    return Path(raw_output).expanduser().resolve()
+
+
 def _group_tasks_by_folder(tasks: List[Dict[str, str]]) -> "OrderedDict[str, List[Dict[str, str]]]":
     grouped: "OrderedDict[str, List[Dict[str, str]]]" = OrderedDict()
     for task in tasks:
@@ -175,7 +184,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         print(f"appended {added} new repo(s) to the gist's 未分类 group.")
 
     # Step 3: parse gist into per-repo tasks rooted at --output
-    output_dir = Path(args.output).expanduser().resolve()
+    output_dir = _normalize_output_path_arg(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     parsed_tasks = parse_repo_tasks(content, owner, output_dir)
